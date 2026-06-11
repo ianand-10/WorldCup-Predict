@@ -33,17 +33,38 @@ Per-goal scorer records (one row per goal).
 | `own_goal` | Yes | `FALSE` |
 | `penalty` | Yes | `FALSE` |
 
+## fifa_rankings.csv (optional but recommended)
+
+Current FIFA rankings used as an ML feature. Update this file whenever rankings change.
+
+| Column | Required | Example |
+|--------|----------|---------|
+| `team` | Yes | `Brazil` |
+| `rank` | Yes* | `5` |
+| `points` | Yes* | `1790 |
+
+\* Provide `points` if you have them (best). If only `rank` is available, the model converts rank to an approximate points value.
+
+Team names must match `matches.csv` exactly. Teams not listed fall back to a default rating of 1500 points.
+
 ## Rebuilding the model
 
-After updating either CSV, regenerate the prediction data:
+After updating any CSV, regenerate the prediction data:
 
 ```bash
 pip install -r scripts/requirements.txt
 npm run build:data
 ```
 
-This writes updated ratings to `public/data/`.
+This writes:
+
+- `public/data/teams.json` — ELO ratings
+- `public/data/scorers.json` — goalscorer shares
+- `public/data/liveState.json` — form, rest days, head-to-head, FIFA points
+- `public/data/model.json` — blend weights, Dixon-Coles rho, ML metrics
+
+Commit all of the above and push to redeploy GitHub Pages.
 
 ## Team name consistency
 
-Team names must match exactly between both files (e.g. always `United States`, never `USA` in one file and `United States` in another).
+Team names must match exactly across all files (e.g. always `United States`, never `USA` in one file and `United States` in another).

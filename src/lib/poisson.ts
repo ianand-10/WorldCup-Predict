@@ -10,16 +10,42 @@ export function poissonPMF(k: number, lambda: number): number {
   return (Math.exp(-lambda) * Math.pow(lambda, k)) / factorial(k);
 }
 
+/** Dixon-Coles adjustment for low-scoring correlation */
+export function dixonColesTau(
+  homeGoals: number,
+  awayGoals: number,
+  lambdaHome: number,
+  lambdaAway: number,
+  rho: number
+): number {
+  if (homeGoals === 0 && awayGoals === 0) {
+    return 1 - lambdaHome * lambdaAway * rho;
+  }
+  if (homeGoals === 0 && awayGoals === 1) {
+    return 1 + lambdaAway * rho;
+  }
+  if (homeGoals === 1 && awayGoals === 0) {
+    return 1 + lambdaHome * rho;
+  }
+  if (homeGoals === 1 && awayGoals === 1) {
+    return 1 - rho;
+  }
+  return 1;
+}
+
 export function scorelineMatrix(
   lambdaHome: number,
   lambdaAway: number,
-  maxGoals: number = 8
+  maxGoals: number = 8,
+  rho: number = 0
 ): { home: number; away: number; probability: number }[] {
   const scorelines: { home: number; away: number; probability: number }[] = [];
 
   for (let h = 0; h <= maxGoals; h++) {
     for (let a = 0; a <= maxGoals; a++) {
-      const prob = poissonPMF(h, lambdaHome) * poissonPMF(a, lambdaAway);
+      const tau = dixonColesTau(h, a, lambdaHome, lambdaAway, rho);
+      const prob =
+        Math.max(0, tau) * poissonPMF(h, lambdaHome) * poissonPMF(a, lambdaAway);
       scorelines.push({ home: h, away: a, probability: prob });
     }
   }

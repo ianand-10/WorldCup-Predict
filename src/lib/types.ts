@@ -1,3 +1,8 @@
+export interface BinaryLogisticModel {
+  coefficients: number[];
+  intercept: number;
+}
+
 export interface TeamRatings {
   overall: number;
   offense: number;
@@ -26,10 +31,17 @@ export interface MLModel {
   featureNames: string[];
   classes: string[];
   accuracy: number;
+  accuracyStd?: number;
+  holdoutAccuracy?: number;
+  cvFolds?: number;
+  drawBlendWeight?: number;
   scalerMean: number[];
   scalerScale: number[];
-  coefficients: number[][];
-  intercepts: number[];
+  outcomeModel: {
+    coefficients: number[][];
+    intercepts: number[];
+  };
+  drawModel: BinaryLogisticModel;
 }
 
 export interface ModelConfig {
@@ -40,7 +52,16 @@ export interface ModelConfig {
   eloBlendWeight: number;
   mlBlendWeight: number;
   maxGoals: number;
+  dixonColesRho?: number;
   ml: MLModel | null;
+}
+
+export interface LiveState {
+  referenceDate: string;
+  form: Record<string, number>;
+  lastMatchDate: Record<string, string>;
+  h2h: Record<string, Record<string, number | string>>;
+  fifaPoints: Record<string, number>;
 }
 
 export type VenueType = "teamA_home" | "neutral" | "teamB_home";

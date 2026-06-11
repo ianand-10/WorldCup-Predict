@@ -67,9 +67,11 @@ export default function MatchPredictor() {
               <p className="font-mono text-sm text-white">
                 {meta.teamCount} teams
               </p>
-              {meta.mlAccuracy && (
+              {meta.mlAccuracy != null && (
                 <p className="font-mono text-[10px] text-accent-emerald">
-                  ML accuracy {(meta.mlAccuracy * 100).toFixed(1)}%
+                  ML CV accuracy {(meta.mlAccuracy * 100).toFixed(1)}%
+                  {meta.mlAccuracyStd != null &&
+                    ` ± ${(meta.mlAccuracyStd * 100).toFixed(1)}%`}
                 </p>
               )}
             </div>

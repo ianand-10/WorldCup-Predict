@@ -28,3 +28,4 @@ jobs:
           test -f public/data/teams.json
           test -f public/data/scorers.json
           test -f public/data/model.json
+          test -f public/data/liveState.json
