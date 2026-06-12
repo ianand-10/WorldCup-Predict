@@ -32,6 +32,22 @@ export function getTeamRatings(team: string): TeamRatings | null {
   return teams.teams[team] ?? null;
 }
 
+function blendWithFifa(eloRating: number, fifaPts: number, weight: number): number {
+  return (1 - weight) * eloRating + weight * fifaPts;
+}
+
+function blendedRatings(
+  ratings: TeamRatings,
+  team: string
+): { offense: number; defense: number } {
+  const fifa = fifaPoints(team);
+  const weight = config.fifaBlendWeight ?? 0.3;
+  return {
+    offense: blendWithFifa(ratings.offense, fifa, weight),
+    defense: blendWithFifa(ratings.defense, fifa, weight),
+  };
+}
+
 function goalExpectation(
   offRating: number,
   defRating: number,
@@ -236,6 +252,9 @@ export function predictMatch(
   const ratingsB = getTeamRatings(teamB);
   if (!ratingsA || !ratingsB) return null;
 
+  const blendedA = blendedRatings(ratingsA, teamA);
+  const blendedB = blendedRatings(ratingsB, teamB);
+
   let venueBoostA = 0;
   let venueBoostB = 0;
 
@@ -247,8 +266,8 @@ export function predictMatch(
     venueBoostA = ratingsA.awayPenalty;
   }
 
-  const lambdaA = goalExpectation(ratingsA.offense, ratingsB.defense, venueBoostA);
-  const lambdaB = goalExpectation(ratingsB.offense, ratingsA.defense, venueBoostB);
+  const lambdaA = goalExpectation(blendedA.offense, blendedB.defense, venueBoostA);
+  const lambdaB = goalExpectation(blendedB.offense, blendedA.defense, venueBoostB);
 
   const [homeLambda, awayLambda] =
     venue === "teamB_home" ? [lambdaB, lambdaA] : [lambdaA, lambdaB];
@@ -299,12 +318,19 @@ export function predictMatch(
 }
 
 export function getModelMeta() {
+  const sys = config.systemMetrics;
   return {
     matchCount: config.matchCount,
     teamCount: config.teamCount,
     generatedAt: config.generatedAt,
     mlAccuracy: config.ml?.accuracy ?? null,
     mlAccuracyStd: config.ml?.accuracyStd ?? null,
+    combinedAccuracy: sys?.combinedAccuracy ?? null,
+    poissonAccuracy: sys?.poissonAccuracy ?? null,
+    mlHoldoutAccuracy: sys?.mlAccuracyHoldout ?? config.ml?.holdoutAccuracy ?? null,
+    fifaBlendWeight: config.fifaBlendWeight ?? null,
+    eloBlendWeight: config.eloBlendWeight,
+    mlBlendWeight: config.mlBlendWeight,
     dixonColesRho: config.dixonColesRho ?? null,
   };
 }

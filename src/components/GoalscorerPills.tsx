@@ -59,7 +59,7 @@ export default function GoalscorerPills({ team, scorers, accent }: Props) {
                   />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-muted">
-                  {s.goals} goals since 2021
+                  {s.goals} goal{s.goals !== 1 ? "s" : ""} in last 12 months
                 </p>
               </motion.div>
             );

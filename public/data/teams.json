@@ -2,1457 +2,1457 @@
   "teams": {
     "United Arab Emirates": {
       "overall": 1578.3,
-      "offense": 1580.6,
-      "defense": 1251.6,
+      "offense": 1607.6,
+      "defense": 1211.1,
       "homeBonus": 0.023,
       "awayPenalty": -0.047
     },
     "Iraq": {
       "overall": 1646.0,
-      "offense": 1508.8,
-      "defense": 1268.3,
+      "offense": 1503.4,
+      "defense": 1207.8,
       "homeBonus": 0.043,
       "awayPenalty": 0.008
     },
     "Kuwait": {
       "overall": 1462.4,
-      "offense": 1475.1,
-      "defense": 1090.9,
+      "offense": 1520.1,
+      "defense": 1075.9,
       "homeBonus": -0.082,
       "awayPenalty": -0.08
     },
     "Palestine": {
       "overall": 1533.4,
-      "offense": 1527.3,
-      "defense": 1273.8,
+      "offense": 1553.4,
+      "defense": 1265.5,
       "homeBonus": 0.0,
       "awayPenalty": -0.063
     },
     "Dominican Republic": {
       "overall": 1516.2,
-      "offense": 1693.8,
-      "defense": 1263.2,
+      "offense": 1744.6,
+      "defense": 1265.4,
       "homeBonus": -0.029,
       "awayPenalty": -0.065
     },
     "Puerto Rico": {
       "overall": 1514.4,
-      "offense": 1656.2,
-      "defense": 1276.7,
+      "offense": 1710.6,
+      "defense": 1277.9,
       "homeBonus": -0.01,
       "awayPenalty": -0.011
     },
     "Guatemala": {
       "overall": 1539.2,
-      "offense": 1590.3,
-      "defense": 1173.1,
+      "offense": 1630.4,
+      "defense": 1164.8,
       "homeBonus": 0.035,
       "awayPenalty": -0.039
     },
     "Serbia": {
       "overall": 1572.0,
-      "offense": 1548.9,
-      "defense": 1204.6,
+      "offense": 1584.1,
+      "defense": 1156.5,
       "homeBonus": -0.021,
       "awayPenalty": -0.003
     },
     "Panama": {
       "overall": 1651.0,
-      "offense": 1679.8,
-      "defense": 1139.6,
+      "offense": 1697.0,
+      "defense": 1052.9,
       "homeBonus": 0.011,
       "awayPenalty": -0.01
     },
     "United States": {
       "overall": 1600.6,
-      "offense": 1652.3,
-      "defense": 1259.0,
+      "offense": 1647.6,
+      "defense": 1182.6,
       "homeBonus": -0.034,
       "awayPenalty": -0.046
     },
     "Trinidad and Tobago": {
       "overall": 1499.0,
-      "offense": 1591.9,
-      "defense": 1089.4,
+      "offense": 1631.1,
+      "defense": 1054.3,
       "homeBonus": 0.008,
       "awayPenalty": -0.103
     },
     "Jordan": {
       "overall": 1617.4,
-      "offense": 1713.7,
-      "defense": 1210.0,
+      "offense": 1754.5,
+      "defense": 1166.8,
       "homeBonus": -0.036,
       "awayPenalty": -0.041
     },
     "Tajikistan": {
       "overall": 1525.3,
-      "offense": 1569.4,
-      "defense": 1308.2,
+      "offense": 1582.9,
+      "defense": 1298.6,
       "homeBonus": -0.002,
       "awayPenalty": -0.047
     },
     "Uzbekistan": {
       "overall": 1668.4,
-      "offense": 1644.7,
-      "defense": 1408.4,
+      "offense": 1659.6,
+      "defense": 1382.1,
       "homeBonus": 0.018,
       "awayPenalty": -0.052
     },
     "Nicaragua": {
       "overall": 1502.1,
-      "offense": 1582.8,
-      "defense": 1261.4,
+      "offense": 1623.1,
+      "defense": 1265.2,
       "homeBonus": -0.009,
       "awayPenalty": -0.085
     },
     "Kenya": {
       "overall": 1483.4,
-      "offense": 1494.5,
-      "defense": 1210.3,
+      "offense": 1517.8,
+      "defense": 1204.1,
       "homeBonus": -0.045,
       "awayPenalty": -0.026
     },
     "South Sudan": {
       "overall": 1374.1,
-      "offense": 1326.0,
-      "defense": 1114.7,
+      "offense": 1355.9,
+      "defense": 1135.7,
       "homeBonus": -0.041,
       "awayPenalty": -0.042
     },
     "Tanzania": {
       "overall": 1426.0,
-      "offense": 1350.5,
-      "defense": 1238.5,
+      "offense": 1358.6,
+      "defense": 1239.9,
       "homeBonus": -0.092,
       "awayPenalty": -0.04
     },
     "Ethiopia": {
       "overall": 1432.5,
-      "offense": 1427.7,
-      "defense": 1140.6,
+      "offense": 1473.0,
+      "defense": 1144.8,
       "homeBonus": -0.005,
       "awayPenalty": -0.06
     },
     "Malawi": {
       "overall": 1433.1,
-      "offense": 1366.2,
-      "defense": 1154.1,
+      "offense": 1390.2,
+      "defense": 1145.0,
       "homeBonus": -0.025,
       "awayPenalty": -0.078
     },
     "Oman": {
       "overall": 1545.2,
-      "offense": 1467.1,
-      "defense": 1281.3,
+      "offense": 1493.4,
+      "defense": 1251.6,
       "homeBonus": -0.063,
       "awayPenalty": -0.062
     },
     "Madagascar": {
       "overall": 1493.3,
-      "offense": 1527.6,
-      "defense": 1152.5,
+      "offense": 1546.7,
+      "defense": 1123.0,
       "homeBonus": -0.009,
       "awayPenalty": -0.076
     },
     "Rwanda": {
       "overall": 1435.5,
-      "offense": 1317.6,
-      "defense": 1300.8,
+      "offense": 1336.9,
+      "defense": 1312.5,
       "homeBonus": -0.046,
       "awayPenalty": -0.042
     },
     "Mozambique": {
       "overall": 1488.2,
-      "offense": 1490.8,
-      "defense": 1109.4,
+      "offense": 1515.8,
+      "defense": 1078.6,
       "homeBonus": -0.055,
       "awayPenalty": -0.049
     },
     "S\u00e3o Tom\u00e9 and Pr\u00edncipe": {
       "overall": 1353.7,
-      "offense": 1382.1,
-      "defense": 1033.9,
+      "offense": 1407.4,
+      "defense": 1063.9,
       "homeBonus": -0.014,
       "awayPenalty": -0.067
     },
     "Sudan": {
       "overall": 1469.6,
-      "offense": 1306.4,
-      "defense": 1170.7,
+      "offense": 1327.3,
+      "defense": 1159.0,
       "homeBonus": -0.005,
       "awayPenalty": -0.06
     },
     "Guinea": {
       "overall": 1525.8,
-      "offense": 1553.5,
-      "defense": 1217.3,
+      "offense": 1570.3,
+      "defense": 1184.9,
       "homeBonus": 0.002,
       "awayPenalty": -0.064
     },
     "Mali": {
       "overall": 1619.9,
-      "offense": 1597.5,
-      "defense": 1483.0,
+      "offense": 1589.3,
+      "defense": 1459.7,
       "homeBonus": -0.011,
       "awayPenalty": -0.011
     },
     "Chad": {
       "overall": 1344.6,
-      "offense": 1338.8,
-      "defense": 1143.4,
+      "offense": 1363.4,
+      "defense": 1173.1,
       "homeBonus": -0.034,
       "awayPenalty": -0.018
     },
     "Namibia": {
       "overall": 1445.0,
-      "offense": 1413.1,
-      "defense": 1191.8,
+      "offense": 1445.8,
+      "defense": 1188.6,
       "homeBonus": 0.006,
       "awayPenalty": -0.026
     },
     "Cyprus": {
       "overall": 1352.7,
-      "offense": 1317.6,
-      "defense": 940.6,
+      "offense": 1360.1,
+      "defense": 924.4,
       "homeBonus": -0.105,
       "awayPenalty": -0.093
     },
     "Slovakia": {
       "overall": 1538.8,
-      "offense": 1510.9,
-      "defense": 1208.7,
+      "offense": 1535.1,
+      "defense": 1165.2,
       "homeBonus": -0.055,
       "awayPenalty": -0.034
     },
     "Slovenia": {
       "overall": 1557.4,
-      "offense": 1445.3,
-      "defense": 1245.6,
+      "offense": 1469.2,
+      "defense": 1214.0,
       "homeBonus": -0.02,
       "awayPenalty": -0.043
     },
     "Croatia": {
       "overall": 1680.9,
-      "offense": 1677.3,
-      "defense": 1297.6,
+      "offense": 1676.9,
+      "defense": 1228.8,
       "homeBonus": -0.012,
       "awayPenalty": 0.039
     },
     "Malta": {
       "overall": 1350.0,
-      "offense": 1280.5,
-      "defense": 972.9,
+      "offense": 1341.3,
+      "defense": 1004.8,
       "homeBonus": -0.117,
       "awayPenalty": -0.036
     },
     "Russia": {
       "overall": 1639.9,
-      "offense": 1649.3,
-      "defense": 1433.0,
+      "offense": 1642.9,
+      "defense": 1415.5,
       "homeBonus": 0.019,
       "awayPenalty": 0.017
     },
     "Latvia": {
       "overall": 1332.4,
-      "offense": 1316.0,
-      "defense": 1057.0,
+      "offense": 1374.2,
+      "defense": 1068.7,
       "homeBonus": -0.145,
       "awayPenalty": -0.077
     },
     "Montenegro": {
       "overall": 1424.5,
-      "offense": 1413.1,
-      "defense": 1069.7,
+      "offense": 1448.1,
+      "defense": 1040.1,
       "homeBonus": -0.105,
       "awayPenalty": -0.073
     },
     "Gibraltar": {
       "overall": 1252.6,
-      "offense": 1149.6,
-      "defense": 766.6,
+      "offense": 1186.5,
+      "defense": 804.6,
       "homeBonus": -0.067,
       "awayPenalty": -0.134
     },
     "Norway": {
       "overall": 1678.8,
-      "offense": 1751.9,
-      "defense": 1315.9,
+      "offense": 1781.0,
+      "defense": 1273.1,
       "homeBonus": -0.015,
       "awayPenalty": 0.029
     },
     "Turkey": {
       "overall": 1698.3,
-      "offense": 1719.2,
-      "defense": 1156.0,
+      "offense": 1750.6,
+      "defense": 1059.6,
       "homeBonus": -0.011,
       "awayPenalty": 0.03
     },
     "Netherlands": {
       "overall": 1698.4,
-      "offense": 1820.6,
-      "defense": 1280.8,
+      "offense": 1843.6,
+      "defense": 1194.6,
       "homeBonus": -0.001,
       "awayPenalty": 0.005
     },
     "Estonia": {
       "overall": 1363.5,
-      "offense": 1326.4,
-      "defense": 985.1,
+      "offense": 1382.4,
+      "defense": 979.5,
       "homeBonus": -0.092,
       "awayPenalty": -0.066
     },
     "Czech Republic": {
       "overall": 1582.0,
-      "offense": 1626.8,
-      "defense": 1202.6,
+      "offense": 1659.0,
+      "defense": 1154.3,
       "homeBonus": 0.038,
       "awayPenalty": -0.087
     },
     "Uganda": {
       "overall": 1506.2,
-      "offense": 1432.9,
-      "defense": 1236.1,
+      "offense": 1442.9,
+      "defense": 1213.7,
       "homeBonus": 0.002,
       "awayPenalty": -0.026
     },
     "Burkina Faso": {
       "overall": 1610.8,
-      "offense": 1674.3,
-      "defense": 1228.9,
+      "offense": 1703.9,
+      "defense": 1172.9,
       "homeBonus": -0.002,
       "awayPenalty": -0.114
     },
     "Finland": {
       "overall": 1430.3,
-      "offense": 1435.1,
-      "defense": 1123.2,
+      "offense": 1469.2,
+      "defense": 1098.3,
       "homeBonus": -0.089,
       "awayPenalty": -0.051
     },
     "Bosnia and Herzegovina": {
       "overall": 1487.1,
-      "offense": 1432.2,
-      "defense": 1132.5,
+      "offense": 1454.5,
+      "defense": 1092.7,
       "homeBonus": -0.081,
       "awayPenalty": -0.041
     },
     "France": {
       "overall": 1748.2,
-      "offense": 1799.4,
-      "defense": 1336.4,
+      "offense": 1795.7,
+      "defense": 1238.7,
       "homeBonus": -0.046,
       "awayPenalty": 0.018
     },
     "Ukraine": {
       "overall": 1605.2,
-      "offense": 1610.6,
-      "defense": 1173.5,
+      "offense": 1637.4,
+      "defense": 1110.2,
       "homeBonus": -0.012,
       "awayPenalty": -0.031
     },
     "Republic of Ireland": {
       "overall": 1553.1,
-      "offense": 1494.5,
-      "defense": 1258.6,
+      "offense": 1516.8,
+      "defense": 1229.8,
       "homeBonus": -0.039,
       "awayPenalty": -0.027
     },
     "Portugal": {
       "overall": 1720.5,
-      "offense": 1825.5,
-      "defense": 1324.3,
+      "offense": 1849.9,
+      "defense": 1249.0,
       "homeBonus": 0.022,
       "awayPenalty": 0.002
     },
     "Azerbaijan": {
       "overall": 1346.4,
-      "offense": 1355.9,
-      "defense": 994.9,
+      "offense": 1410.0,
+      "defense": 989.9,
       "homeBonus": -0.096,
       "awayPenalty": -0.053
     },
     "Saint Kitts and Nevis": {
       "overall": 1447.2,
-      "offense": 1542.3,
-      "defense": 1067.2,
+      "offense": 1591.2,
+      "defense": 1047.5,
       "homeBonus": -0.061,
       "awayPenalty": -0.077
     },
     "Dominica": {
       "overall": 1418.7,
-      "offense": 1462.1,
-      "defense": 1210.1,
+      "offense": 1502.0,
+      "defense": 1216.5,
       "homeBonus": -0.022,
       "awayPenalty": -0.044
     },
     "Cuba": {
       "overall": 1471.0,
-      "offense": 1522.6,
-      "defense": 1205.1,
+      "offense": 1576.4,
+      "defense": 1224.4,
       "homeBonus": 0.001,
       "awayPenalty": -0.108
     },
     "Suriname": {
       "overall": 1530.0,
-      "offense": 1575.3,
-      "defense": 1298.4,
+      "offense": 1621.8,
+      "defense": 1310.2,
       "homeBonus": 0.013,
       "awayPenalty": -0.035
     },
     "Cayman Islands": {
       "overall": 1359.8,
-      "offense": 1369.3,
-      "defense": 1022.6,
+      "offense": 1399.7,
+      "defense": 1034.4,
       "homeBonus": -0.058,
       "awayPenalty": -0.08
     },
     "Antigua and Barbuda": {
       "overall": 1349.5,
-      "offense": 1405.1,
-      "defense": 1110.9,
+      "offense": 1429.7,
+      "defense": 1078.3,
       "homeBonus": -0.098,
       "awayPenalty": -0.012
     },
     "Montserrat": {
       "overall": 1427.7,
-      "offense": 1516.5,
-      "defense": 1162.0,
+      "offense": 1569.4,
+      "defense": 1160.6,
       "homeBonus": -0.002,
       "awayPenalty": -0.03
     },
     "Qatar": {
       "overall": 1526.4,
-      "offense": 1595.9,
-      "defense": 1076.6,
+      "offense": 1602.6,
+      "defense": 980.2,
       "homeBonus": -0.058,
       "awayPenalty": -0.086
     },
     "Luxembourg": {
       "overall": 1366.2,
-      "offense": 1289.6,
-      "defense": 1092.0,
+      "offense": 1324.7,
+      "defense": 1084.5,
       "homeBonus": -0.15,
       "awayPenalty": -0.019
     },
     "Kosovo": {
       "overall": 1572.8,
-      "offense": 1524.7,
-      "defense": 1188.9,
+      "offense": 1569.9,
+      "defense": 1168.5,
       "homeBonus": -0.061,
       "awayPenalty": 0.014
     },
     "Lithuania": {
       "overall": 1296.1,
-      "offense": 1233.6,
-      "defense": 1024.4,
+      "offense": 1278.5,
+      "defense": 1037.0,
       "homeBonus": -0.133,
       "awayPenalty": -0.128
     },
     "Lebanon": {
       "overall": 1497.8,
-      "offense": 1497.9,
-      "defense": 1265.0,
+      "offense": 1501.3,
+      "defense": 1250.1,
       "homeBonus": -0.045,
       "awayPenalty": -0.071
     },
     "Belarus": {
       "overall": 1472.2,
-      "offense": 1415.8,
-      "defense": 1051.1,
+      "offense": 1451.4,
+      "defense": 1031.9,
       "homeBonus": -0.008,
       "awayPenalty": -0.021
     },
     "Honduras": {
       "overall": 1554.2,
-      "offense": 1494.3,
-      "defense": 1154.1,
+      "offense": 1499.4,
+      "defense": 1102.8,
       "homeBonus": -0.006,
       "awayPenalty": -0.036
     },
     "Belgium": {
       "overall": 1660.6,
-      "offense": 1762.7,
-      "defense": 1325.8,
+      "offense": 1767.6,
+      "defense": 1254.7,
       "homeBonus": 0.002,
       "awayPenalty": 0.047
     },
     "Wales": {
       "overall": 1530.3,
-      "offense": 1528.2,
-      "defense": 1197.4,
+      "offense": 1547.9,
+      "defense": 1142.5,
       "homeBonus": -0.039,
       "awayPenalty": -0.066
     },
     "Romania": {
       "overall": 1526.0,
-      "offense": 1520.8,
-      "defense": 1227.4,
+      "offense": 1543.6,
+      "defense": 1186.9,
       "homeBonus": -0.065,
       "awayPenalty": -0.041
     },
     "North Macedonia": {
       "overall": 1495.8,
-      "offense": 1476.5,
-      "defense": 1145.2,
+      "offense": 1513.6,
+      "defense": 1118.4,
       "homeBonus": -0.059,
       "awayPenalty": -0.011
     },
     "Liechtenstein": {
       "overall": 1160.6,
-      "offense": 998.4,
-      "defense": 736.0,
+      "offense": 1021.2,
+      "defense": 760.3,
       "homeBonus": -0.15,
       "awayPenalty": -0.142
     },
     "Armenia": {
       "overall": 1346.5,
-      "offense": 1376.8,
-      "defense": 937.9,
+      "offense": 1430.4,
+      "defense": 911.1,
       "homeBonus": -0.104,
       "awayPenalty": -0.113
     },
     "Andorra": {
       "overall": 1246.1,
-      "offense": 1116.2,
-      "defense": 1020.9,
+      "offense": 1155.3,
+      "defense": 1059.0,
       "homeBonus": -0.127,
       "awayPenalty": -0.112
     },
     "Albania": {
       "overall": 1492.9,
-      "offense": 1387.3,
-      "defense": 1309.4,
+      "offense": 1406.3,
+      "defense": 1301.5,
       "homeBonus": -0.089,
       "awayPenalty": -0.031
     },
     "Hungary": {
       "overall": 1565.6,
-      "offense": 1552.2,
-      "defense": 1186.8,
+      "offense": 1579.0,
+      "defense": 1139.9,
       "homeBonus": -0.074,
       "awayPenalty": 0.005
     },
     "Poland": {
       "overall": 1562.4,
-      "offense": 1613.0,
-      "defense": 1139.4,
+      "offense": 1646.6,
+      "defense": 1067.7,
       "homeBonus": -0.002,
       "awayPenalty": -0.031
     },
     "South Africa": {
       "overall": 1593.2,
-      "offense": 1563.2,
-      "defense": 1294.0,
+      "offense": 1562.8,
+      "defense": 1247.6,
       "homeBonus": -0.036,
       "awayPenalty": -0.028
     },
     "Ghana": {
       "overall": 1535.2,
-      "offense": 1563.4,
-      "defense": 1218.5,
+      "offense": 1582.9,
+      "defense": 1179.3,
       "homeBonus": 0.025,
       "awayPenalty": -0.067
     },
     "Germany": {
       "overall": 1700.3,
-      "offense": 1827.5,
-      "defense": 1274.0,
+      "offense": 1852.4,
+      "defense": 1190.8,
       "homeBonus": -0.052,
       "awayPenalty": 0.053
     },
     "Iceland": {
       "overall": 1461.0,
-      "offense": 1541.9,
-      "defense": 1040.5,
+      "offense": 1590.2,
+      "defense": 996.3,
       "homeBonus": -0.056,
       "awayPenalty": -0.05
     },
     "Gambia": {
       "overall": 1515.7,
-      "offense": 1634.6,
-      "defense": 1164.2,
+      "offense": 1681.6,
+      "defense": 1145.9,
       "homeBonus": 0.006,
       "awayPenalty": -0.041
     },
     "Angola": {
       "overall": 1540.9,
-      "offense": 1464.7,
-      "defense": 1295.6,
+      "offense": 1484.8,
+      "defense": 1277.7,
       "homeBonus": -0.035,
       "awayPenalty": -0.051
     },
     "Equatorial Guinea": {
       "overall": 1458.9,
-      "offense": 1406.6,
-      "defense": 1181.8,
+      "offense": 1435.6,
+      "defense": 1158.8,
       "homeBonus": 0.009,
       "awayPenalty": -0.062
     },
     "Comoros": {
       "overall": 1490.7,
-      "offense": 1484.7,
-      "defense": 1145.5,
+      "offense": 1520.3,
+      "defense": 1116.8,
       "homeBonus": 0.036,
       "awayPenalty": -0.057
     },
     "Togo": {
       "overall": 1478.6,
-      "offense": 1445.6,
-      "defense": 1248.1,
+      "offense": 1475.3,
+      "defense": 1248.3,
       "homeBonus": -0.047,
       "awayPenalty": -0.044
     },
     "Egypt": {
       "overall": 1691.7,
-      "offense": 1610.6,
-      "defense": 1400.8,
+      "offense": 1600.2,
+      "defense": 1351.8,
       "homeBonus": 0.035,
       "awayPenalty": -0.005
     },
     "Botswana": {
       "overall": 1428.0,
-      "offense": 1380.4,
-      "defense": 1176.0,
+      "offense": 1411.2,
+      "defense": 1189.9,
       "homeBonus": -0.048,
       "awayPenalty": -0.089
     },
     "Zimbabwe": {
       "overall": 1433.6,
-      "offense": 1383.3,
-      "defense": 1227.4,
+      "offense": 1413.2,
+      "defense": 1231.7,
       "homeBonus": -0.031,
       "awayPenalty": 0.002
     },
     "Zambia": {
       "overall": 1500.9,
-      "offense": 1537.5,
-      "defense": 1159.5,
+      "offense": 1580.9,
+      "defense": 1126.6,
       "homeBonus": -0.02,
       "awayPenalty": -0.068
     },
     "Algeria": {
       "overall": 1740.7,
-      "offense": 1813.9,
-      "defense": 1332.0,
+      "offense": 1829.0,
+      "defense": 1256.8,
       "homeBonus": 0.004,
       "awayPenalty": 0.068
     },
     "England": {
       "overall": 1736.6,
-      "offense": 1834.4,
-      "defense": 1494.2,
+      "offense": 1824.9,
+      "defense": 1432.6,
       "homeBonus": -0.057,
       "awayPenalty": 0.037
     },
     "San Marino": {
       "overall": 1151.7,
-      "offense": 1077.6,
-      "defense": 656.1,
+      "offense": 1122.5,
+      "defense": 696.7,
       "homeBonus": -0.15,
       "awayPenalty": -0.14
     },
     "Libya": {
       "overall": 1523.9,
-      "offense": 1440.1,
-      "defense": 1240.4,
+      "offense": 1463.4,
+      "defense": 1234.7,
       "homeBonus": -0.024,
       "awayPenalty": -0.063
     },
     "Tunisia": {
       "overall": 1631.8,
-      "offense": 1566.9,
-      "defense": 1400.3,
+      "offense": 1569.1,
+      "defense": 1366.2,
       "homeBonus": -0.002,
       "awayPenalty": 0.011
     },
     "Mongolia": {
       "overall": 1372.9,
-      "offense": 1361.0,
-      "defense": 1151.8,
+      "offense": 1370.4,
+      "defense": 1186.9,
       "homeBonus": -0.02,
       "awayPenalty": -0.087
     },
     "Gabon": {
       "overall": 1521.3,
-      "offense": 1590.8,
-      "defense": 1162.9,
+      "offense": 1628.8,
+      "defense": 1133.4,
       "homeBonus": 0.005,
       "awayPenalty": -0.066
     },
     "DR Congo": {
       "overall": 1645.0,
-      "offense": 1517.0,
-      "defense": 1402.4,
+      "offense": 1506.8,
+      "defense": 1366.0,
       "homeBonus": 0.001,
       "awayPenalty": -0.03
     },
     "Moldova": {
       "overall": 1328.7,
-      "offense": 1311.6,
-      "defense": 889.2,
+      "offense": 1378.0,
+      "defense": 894.3,
       "homeBonus": -0.138,
       "awayPenalty": -0.061
     },
     "Faroe Islands": {
       "overall": 1401.8,
-      "offense": 1315.2,
-      "defense": 1111.6,
+      "offense": 1359.2,
+      "defense": 1106.3,
       "homeBonus": -0.076,
       "awayPenalty": -0.113
     },
     "Spain": {
       "overall": 1820.1,
-      "offense": 1881.7,
-      "defense": 1373.5,
+      "offense": 1884.4,
+      "defense": 1283.5,
       "homeBonus": -0.02,
       "awayPenalty": 0.071
     },
     "Greece": {
       "overall": 1563.6,
-      "offense": 1565.4,
-      "defense": 1326.4,
+      "offense": 1596.7,
+      "defense": 1311.8,
       "homeBonus": -0.044,
       "awayPenalty": -0.026
     },
     "Israel": {
       "overall": 1528.1,
-      "offense": 1640.2,
-      "defense": 1028.8,
+      "offense": 1714.3,
+      "defense": 981.5,
       "homeBonus": -0.017,
       "awayPenalty": -0.038
     },
     "Denmark": {
       "overall": 1645.6,
-      "offense": 1704.7,
-      "defense": 1312.5,
+      "offense": 1736.9,
+      "defense": 1259.2,
       "homeBonus": 0.035,
       "awayPenalty": -0.047
     },
     "Bahrain": {
       "overall": 1480.1,
-      "offense": 1527.5,
-      "defense": 1160.1,
+      "offense": 1572.4,
+      "defense": 1125.5,
       "homeBonus": -0.129,
       "awayPenalty": -0.029
     },
     "Syria": {
       "overall": 1530.9,
-      "offense": 1561.2,
-      "defense": 1206.4,
+      "offense": 1580.5,
+      "defense": 1168.4,
       "homeBonus": 0.0,
       "awayPenalty": -0.078
     },
     "India": {
       "overall": 1385.0,
-      "offense": 1367.5,
-      "defense": 1240.9,
+      "offense": 1384.7,
+      "defense": 1240.5,
       "homeBonus": -0.052,
       "awayPenalty": -0.053
     },
     "Japan": {
       "overall": 1745.2,
-      "offense": 1892.0,
-      "defense": 1451.7,
+      "offense": 1920.1,
+      "defense": 1401.5,
       "homeBonus": -0.004,
       "awayPenalty": 0.036
     },
     "South Korea": {
       "overall": 1699.9,
-      "offense": 1755.0,
-      "defense": 1302.9,
+      "offense": 1770.1,
+      "defense": 1239.3,
       "homeBonus": -0.026,
       "awayPenalty": 0.013
     },
     "Saudi Arabia": {
       "overall": 1595.6,
-      "offense": 1486.7,
-      "defense": 1275.7,
+      "offense": 1494.1,
+      "defense": 1236.0,
       "homeBonus": -0.033,
       "awayPenalty": -0.005
     },
     "Jamaica": {
       "overall": 1580.1,
-      "offense": 1526.5,
-      "defense": 1197.1,
+      "offense": 1553.9,
+      "defense": 1149.7,
       "homeBonus": -0.052,
       "awayPenalty": 0.018
     },
     "Scotland": {
       "overall": 1592.3,
-      "offense": 1600.7,
-      "defense": 1202.3,
+      "offense": 1633.6,
+      "defense": 1153.9,
       "homeBonus": -0.057,
       "awayPenalty": -0.016
     },
     "Austria": {
       "overall": 1645.0,
-      "offense": 1667.3,
-      "defense": 1265.4,
+      "offense": 1690.2,
+      "defense": 1192.3,
       "homeBonus": 0.0,
       "awayPenalty": -0.022
     },
     "Canada": {
       "overall": 1654.3,
-      "offense": 1719.8,
-      "defense": 1327.1,
+      "offense": 1751.2,
+      "defense": 1282.9,
       "homeBonus": -0.014,
       "awayPenalty": -0.015
     },
     "Bermuda": {
       "overall": 1429.0,
-      "offense": 1594.0,
-      "defense": 956.8,
+      "offense": 1657.6,
+      "defense": 936.5,
       "homeBonus": -0.057,
       "awayPenalty": -0.027
     },
     "El Salvador": {
       "overall": 1455.8,
-      "offense": 1396.9,
-      "defense": 1167.4,
+      "offense": 1434.6,
+      "defense": 1138.5,
       "homeBonus": -0.052,
       "awayPenalty": -0.042
     },
     "Grenada": {
       "overall": 1407.2,
-      "offense": 1463.1,
-      "defense": 1031.9,
+      "offense": 1502.3,
+      "defense": 1035.9,
       "homeBonus": -0.064,
       "awayPenalty": -0.054
     },
     "Barbados": {
       "overall": 1367.0,
-      "offense": 1513.8,
-      "defense": 1014.8,
+      "offense": 1572.8,
+      "defense": 985.0,
       "homeBonus": -0.057,
       "awayPenalty": -0.059
     },
     "Haiti": {
       "overall": 1616.7,
-      "offense": 1832.9,
-      "defense": 1251.7,
+      "offense": 1896.5,
+      "defense": 1214.3,
       "homeBonus": -0.001,
       "awayPenalty": 0.025
     },
     "Belize": {
       "overall": 1426.6,
-      "offense": 1481.0,
-      "defense": 1169.3,
+      "offense": 1534.2,
+      "defense": 1179.8,
       "homeBonus": -0.061,
       "awayPenalty": -0.036
     },
     "Guyana": {
       "overall": 1533.6,
-      "offense": 1678.4,
-      "defense": 1147.1,
+      "offense": 1728.4,
+      "defense": 1116.9,
       "homeBonus": -0.021,
       "awayPenalty": -0.026
     },
     "Sweden": {
       "overall": 1559.6,
-      "offense": 1647.0,
-      "defense": 1174.1,
+      "offense": 1682.4,
+      "defense": 1120.3,
       "homeBonus": 0.004,
       "awayPenalty": -0.096
     },
     "Georgia": {
       "overall": 1510.6,
-      "offense": 1556.4,
-      "defense": 1157.5,
+      "offense": 1614.7,
+      "defense": 1138.6,
       "homeBonus": -0.045,
       "awayPenalty": -0.006
     },
     "Bulgaria": {
       "overall": 1425.3,
-      "offense": 1403.1,
-      "defense": 1051.0,
+      "offense": 1424.2,
+      "defense": 1023.5,
       "homeBonus": -0.099,
       "awayPenalty": -0.063
     },
     "Switzerland": {
       "overall": 1659.0,
-      "offense": 1699.9,
-      "defense": 1226.6,
+      "offense": 1721.7,
+      "defense": 1147.0,
       "homeBonus": -0.004,
       "awayPenalty": -0.036
     },
     "Italy": {
       "overall": 1661.6,
-      "offense": 1655.7,
-      "defense": 1270.7,
+      "offense": 1664.8,
+      "defense": 1194.2,
       "homeBonus": -0.039,
       "awayPenalty": 0.039
     },
     "Northern Ireland": {
       "overall": 1483.0,
-      "offense": 1432.7,
-      "defense": 1264.2,
+      "offense": 1453.8,
+      "defense": 1251.8,
       "homeBonus": -0.036,
       "awayPenalty": -0.088
     },
     "Cura\u00e7ao": {
       "overall": 1558.0,
-      "offense": 1680.3,
-      "defense": 1290.5,
+      "offense": 1709.2,
+      "defense": 1261.8,
       "homeBonus": -0.011,
       "awayPenalty": -0.051
     },
     "Saint Vincent and the Grenadines": {
       "overall": 1470.8,
-      "offense": 1619.8,
-      "defense": 1042.0,
+      "offense": 1691.0,
+      "defense": 1022.2,
       "homeBonus": -0.024,
       "awayPenalty": -0.076
     },
     "Congo": {
       "overall": 1376.9,
-      "offense": 1404.7,
-      "defense": 1118.2,
+      "offense": 1422.4,
+      "defense": 1112.2,
       "homeBonus": -0.051,
       "awayPenalty": -0.066
     },
     "Senegal": {
       "overall": 1748.0,
-      "offense": 1755.0,
-      "defense": 1424.0,
+      "offense": 1726.3,
+      "defense": 1343.9,
       "homeBonus": 0.015,
       "awayPenalty": -0.018
     },
     "Niger": {
       "overall": 1480.3,
-      "offense": 1526.9,
-      "defense": 1116.0,
+      "offense": 1565.9,
+      "defense": 1084.6,
       "homeBonus": -0.005,
       "awayPenalty": -0.014
     },
     "Ivory Coast": {
       "overall": 1698.5,
-      "offense": 1700.6,
-      "defense": 1401.0,
+      "offense": 1695.6,
+      "defense": 1348.6,
       "homeBonus": 0.027,
       "awayPenalty": -0.047
     },
     "Eswatini": {
       "overall": 1405.2,
-      "offense": 1440.7,
-      "defense": 1130.8,
+      "offense": 1479.1,
+      "defense": 1142.4,
       "homeBonus": -0.014,
       "awayPenalty": -0.072
     },
     "Guinea-Bissau": {
       "overall": 1406.8,
-      "offense": 1416.1,
-      "defense": 1181.0,
+      "offense": 1447.7,
+      "defense": 1185.1,
       "homeBonus": -0.018,
       "awayPenalty": -0.027
     },
     "Cape Verde": {
       "overall": 1596.5,
-      "offense": 1550.9,
-      "defense": 1283.6,
+      "offense": 1534.7,
+      "defense": 1231.5,
       "homeBonus": -0.016,
       "awayPenalty": -0.043
     },
     "Cameroon": {
       "overall": 1618.9,
-      "offense": 1568.9,
-      "defense": 1320.3,
+      "offense": 1567.0,
+      "defense": 1269.2,
       "homeBonus": 0.023,
       "awayPenalty": -0.052
     },
     "Mauritania": {
       "overall": 1447.7,
-      "offense": 1287.4,
-      "defense": 1183.3,
+      "offense": 1306.1,
+      "defense": 1174.0,
       "homeBonus": -0.022,
       "awayPenalty": -0.051
     },
     "Morocco": {
       "overall": 1790.5,
-      "offense": 1739.5,
-      "defense": 1542.0,
+      "offense": 1699.6,
+      "defense": 1482.3,
       "homeBonus": 0.068,
       "awayPenalty": -0.013
     },
     "Burundi": {
       "overall": 1429.6,
-      "offense": 1479.9,
-      "defense": 1208.3,
+      "offense": 1507.4,
+      "defense": 1207.0,
       "homeBonus": -0.017,
       "awayPenalty": -0.048
     },
     "Central African Republic": {
       "overall": 1404.7,
-      "offense": 1499.1,
-      "defense": 1060.4,
+      "offense": 1541.4,
+      "defense": 1052.8,
       "homeBonus": -0.014,
       "awayPenalty": -0.054
     },
     "Chile": {
       "overall": 1499.3,
-      "offense": 1409.6,
-      "defense": 1158.1,
+      "offense": 1423.0,
+      "defense": 1133.8,
       "homeBonus": -0.007,
       "awayPenalty": -0.094
     },
     "Bolivia": {
       "overall": 1469.2,
-      "offense": 1370.6,
-      "defense": 953.5,
+      "offense": 1419.6,
+      "defense": 923.4,
       "homeBonus": 0.049,
       "awayPenalty": -0.131
     },
     "Benin": {
       "overall": 1503.1,
-      "offense": 1467.6,
-      "defense": 1188.0,
+      "offense": 1489.0,
+      "defense": 1169.4,
       "homeBonus": -0.049,
       "awayPenalty": -0.049
     },
     "Nigeria": {
       "overall": 1706.1,
-      "offense": 1709.3,
-      "defense": 1283.1,
+      "offense": 1689.1,
+      "defense": 1204.7,
       "homeBonus": -0.041,
       "awayPenalty": 0.008
     },
     "Lesotho": {
       "overall": 1435.9,
-      "offense": 1358.3,
-      "defense": 1148.0,
+      "offense": 1383.4,
+      "defense": 1142.8,
       "homeBonus": -0.004,
       "awayPenalty": -0.051
     },
     "Sierra Leone": {
       "overall": 1485.5,
-      "offense": 1479.9,
-      "defense": 1205.3,
+      "offense": 1517.8,
+      "defense": 1192.6,
       "homeBonus": 0.005,
       "awayPenalty": -0.075
     },
     "Bahamas": {
       "overall": 1298.3,
-      "offense": 1395.7,
-      "defense": 863.9,
+      "offense": 1440.2,
+      "defense": 852.3,
       "homeBonus": -0.06,
       "awayPenalty": -0.072
     },
     "Turks and Caicos Islands": {
       "overall": 1396.9,
-      "offense": 1457.7,
-      "defense": 985.1,
+      "offense": 1511.6,
+      "defense": 996.5,
       "homeBonus": -0.061,
       "awayPenalty": -0.02
     },
     "Anguilla": {
       "overall": 1315.4,
-      "offense": 1278.0,
-      "defense": 914.2,
+      "offense": 1293.9,
+      "defense": 933.8,
       "homeBonus": -0.059,
       "awayPenalty": -0.051
     },
     "British Virgin Islands": {
       "overall": 1365.2,
-      "offense": 1369.6,
-      "defense": 1055.4,
+      "offense": 1407.8,
+      "defense": 1064.4,
       "homeBonus": -0.043,
       "awayPenalty": -0.049
     },
     "Aruba": {
       "overall": 1434.8,
-      "offense": 1525.0,
-      "defense": 1103.7,
+      "offense": 1584.9,
+      "defense": 1102.0,
       "homeBonus": -0.033,
       "awayPenalty": -0.021
     },
     "United States Virgin Islands": {
       "overall": 1358.4,
-      "offense": 1445.3,
-      "defense": 1081.9,
+      "offense": 1421.3,
+      "defense": 944.4,
       "homeBonus": -0.077,
       "awayPenalty": -0.052
     },
     "Mexico": {
       "overall": 1687.6,
-      "offense": 1618.9,
-      "defense": 1297.2,
+      "offense": 1604.2,
+      "defense": 1222.1,
       "homeBonus": 0.014,
       "awayPenalty": -0.045
     },
     "Nepal": {
       "overall": 1378.6,
-      "offense": 1323.6,
-      "defense": 1061.7,
+      "offense": 1346.6,
+      "defense": 1063.8,
       "homeBonus": -0.003,
       "awayPenalty": -0.104
     },
     "Bangladesh": {
       "overall": 1394.5,
-      "offense": 1329.7,
-      "defense": 1069.2,
+      "offense": 1357.0,
+      "defense": 1067.4,
       "homeBonus": -0.051,
       "awayPenalty": -0.049
     },
     "Costa Rica": {
       "overall": 1592.9,
-      "offense": 1629.7,
-      "defense": 1178.7,
+      "offense": 1638.3,
+      "defense": 1118.7,
       "homeBonus": 0.004,
       "awayPenalty": -0.035
     },
     "Kazakhstan": {
       "overall": 1417.0,
-      "offense": 1372.0,
-      "defense": 1061.7,
+      "offense": 1424.4,
+      "defense": 1059.8,
       "homeBonus": -0.062,
       "awayPenalty": -0.093
     },
     "Ecuador": {
       "overall": 1681.4,
-      "offense": 1428.4,
-      "defense": 1388.0,
+      "offense": 1428.1,
+      "defense": 1354.0,
       "homeBonus": 0.022,
       "awayPenalty": -0.026
     },
     "Iran": {
       "overall": 1726.3,
-      "offense": 1795.3,
-      "defense": 1395.0,
+      "offense": 1790.9,
+      "defense": 1331.7,
       "homeBonus": 0.03,
       "awayPenalty": 0.004
     },
     "Indonesia": {
       "overall": 1508.5,
-      "offense": 1608.7,
-      "defense": 1089.4,
+      "offense": 1679.5,
+      "defense": 1045.2,
       "homeBonus": -0.02,
       "awayPenalty": -0.037
     },
     "Afghanistan": {
       "overall": 1414.0,
-      "offense": 1402.8,
-      "defense": 1187.3,
+      "offense": 1431.8,
+      "defense": 1196.1,
       "homeBonus": -0.016,
       "awayPenalty": -0.058
     },
     "Thailand": {
       "overall": 1567.7,
-      "offense": 1677.1,
-      "defense": 1212.8,
+      "offense": 1715.0,
+      "defense": 1169.4,
       "homeBonus": -0.023,
       "awayPenalty": -0.062
     },
     "Myanmar": {
       "overall": 1360.0,
-      "offense": 1427.9,
-      "defense": 835.1,
+      "offense": 1440.7,
+      "defense": 777.8,
       "homeBonus": -0.018,
       "awayPenalty": -0.091
     },
     "Malaysia": {
       "overall": 1567.6,
-      "offense": 1619.6,
-      "defense": 1177.1,
+      "offense": 1677.0,
+      "defense": 1158.0,
       "homeBonus": 0.065,
       "awayPenalty": -0.078
     },
     "Singapore": {
       "overall": 1446.2,
-      "offense": 1496.3,
-      "defense": 1009.7,
+      "offense": 1537.0,
+      "defense": 974.7,
       "homeBonus": -0.076,
       "awayPenalty": -0.025
     },
     "China": {
       "overall": 1497.4,
-      "offense": 1490.4,
-      "defense": 1218.7,
+      "offense": 1466.1,
+      "defense": 1140.1,
       "homeBonus": -0.023,
       "awayPenalty": -0.056
     },
     "Guam": {
       "overall": 1385.6,
-      "offense": 1459.9,
-      "defense": 1183.4,
+      "offense": 1481.3,
+      "defense": 1212.5,
       "homeBonus": -0.012,
       "awayPenalty": -0.05
     },
     "Vietnam": {
       "overall": 1534.4,
-      "offense": 1587.0,
-      "defense": 1206.0,
+      "offense": 1627.6,
+      "defense": 1171.9,
       "homeBonus": 0.014,
       "awayPenalty": -0.034
     },
     "Venezuela": {
       "overall": 1522.3,
-      "offense": 1460.0,
-      "defense": 1110.9,
+      "offense": 1486.5,
+      "defense": 1080.1,
       "homeBonus": -0.014,
       "awayPenalty": -0.109
     },
     "Argentina": {
       "overall": 1784.0,
-      "offense": 1789.0,
-      "defense": 1520.5,
+      "offense": 1775.7,
+      "defense": 1469.1,
       "homeBonus": -0.008,
       "awayPenalty": 0.005
     },
     "Peru": {
       "overall": 1473.1,
-      "offense": 1299.1,
-      "defense": 1219.5,
+      "offense": 1316.9,
+      "defense": 1203.9,
       "homeBonus": -0.004,
       "awayPenalty": -0.104
     },
     "Colombia": {
       "overall": 1679.9,
-      "offense": 1692.5,
-      "defense": 1329.5,
+      "offense": 1706.1,
+      "defense": 1286.4,
       "homeBonus": -0.03,
       "awayPenalty": -0.014
     },
     "Australia": {
       "overall": 1686.7,
-      "offense": 1715.8,
-      "defense": 1411.5,
+      "offense": 1715.3,
+      "defense": 1372.9,
       "homeBonus": -0.01,
       "awayPenalty": 0.006
     },
     "Uruguay": {
       "overall": 1636.3,
-      "offense": 1516.5,
-      "defense": 1394.2,
+      "offense": 1513.2,
+      "defense": 1354.3,
       "homeBonus": 0.02,
       "awayPenalty": -0.044
     },
     "Paraguay": {
       "overall": 1585.3,
-      "offense": 1396.1,
-      "defense": 1241.8,
+      "offense": 1398.6,
+      "defense": 1212.8,
       "homeBonus": 0.025,
       "awayPenalty": -0.064
     },
     "Cambodia": {
       "overall": 1394.4,
-      "offense": 1484.3,
-      "defense": 1040.0,
+      "offense": 1520.4,
+      "defense": 1033.7,
       "homeBonus": -0.005,
       "awayPenalty": -0.095
     },
     "Taiwan": {
       "overall": 1346.6,
-      "offense": 1467.5,
-      "defense": 1077.9,
+      "offense": 1505.2,
+      "defense": 1083.0,
       "homeBonus": -0.049,
       "awayPenalty": -0.059
     },
     "Hong Kong": {
       "overall": 1445.1,
-      "offense": 1514.7,
-      "defense": 1172.6,
+      "offense": 1552.0,
+      "defense": 1167.7,
       "homeBonus": -0.002,
       "awayPenalty": -0.099
     },
     "Maldives": {
       "overall": 1351.7,
-      "offense": 1416.1,
-      "defense": 1110.2,
+      "offense": 1429.3,
+      "defense": 1107.0,
       "homeBonus": -0.056,
       "awayPenalty": -0.062
     },
     "Brazil": {
       "overall": 1695.5,
-      "offense": 1723.7,
-      "defense": 1379.0,
+      "offense": 1734.7,
+      "defense": 1329.9,
       "homeBonus": 0.024,
       "awayPenalty": -0.02
     },
     "Turkmenistan": {
       "overall": 1463.0,
-      "offense": 1496.7,
-      "defense": 1253.7,
+      "offense": 1523.2,
+      "defense": 1253.9,
       "homeBonus": -0.004,
       "awayPenalty": -0.069
     },
     "Sri Lanka": {
       "overall": 1388.8,
-      "offense": 1381.3,
-      "defense": 1183.7,
+      "offense": 1405.3,
+      "defense": 1192.4,
       "homeBonus": -0.024,
       "awayPenalty": -0.063
     },
     "Yemen": {
       "overall": 1471.7,
-      "offense": 1545.0,
-      "defense": 1218.0,
+      "offense": 1564.1,
+      "defense": 1217.4,
       "homeBonus": 0.0,
       "awayPenalty": -0.011
     },
     "Kyrgyzstan": {
       "overall": 1464.6,
-      "offense": 1546.5,
-      "defense": 1172.1,
+      "offense": 1584.4,
+      "defense": 1140.2,
       "homeBonus": 0.004,
       "awayPenalty": -0.069
     },
     "Philippines": {
       "overall": 1477.2,
-      "offense": 1553.8,
-      "defense": 1149.7,
+      "offense": 1576.8,
+      "defense": 1118.3,
       "homeBonus": -0.006,
       "awayPenalty": -0.092
     },
     "Liberia": {
       "overall": 1437.5,
-      "offense": 1411.8,
-      "defense": 1155.1,
+      "offense": 1445.4,
+      "defense": 1164.4,
       "homeBonus": -0.016,
       "awayPenalty": -0.081
     },
     "Djibouti": {
       "overall": 1317.7,
-      "offense": 1386.9,
-      "defense": 946.8,
+      "offense": 1416.1,
+      "defense": 967.3,
       "homeBonus": 0.006,
       "awayPenalty": -0.016
     },
     "Somalia": {
       "overall": 1363.4,
-      "offense": 1359.4,
-      "defense": 1205.7,
+      "offense": 1380.4,
+      "defense": 1230.8,
       "homeBonus": 0.0,
       "awayPenalty": -0.028
     },
     "Guadeloupe": {
       "overall": 1536.4,
-      "offense": 1605.6,
-      "defense": 1352.6,
+      "offense": 1582.2,
+      "defense": 1310.0,
       "homeBonus": 0.011,
       "awayPenalty": 0.002
     },
     "French Guiana": {
       "overall": 1484.7,
-      "offense": 1565.1,
-      "defense": 1347.4,
+      "offense": 1542.5,
+      "defense": 1292.6,
       "homeBonus": -0.039,
       "awayPenalty": -0.032
     },
     "Martinique": {
       "overall": 1459.2,
-      "offense": 1454.5,
-      "defense": 1282.6,
+      "offense": 1444.4,
+      "defense": 1238.6,
       "homeBonus": -0.016,
       "awayPenalty": -0.037
     },
     "Seychelles": {
       "overall": 1309.5,
-      "offense": 1307.9,
-      "defense": 885.5,
+      "offense": 1329.4,
+      "defense": 900.6,
       "homeBonus": 0.0,
       "awayPenalty": -0.039
     },
     "New Zealand": {
       "overall": 1559.0,
-      "offense": 1769.6,
-      "defense": 1361.1,
+      "offense": 1790.1,
+      "defense": 1368.8,
       "homeBonus": -0.017,
       "awayPenalty": -0.032
     },
     "Timor-Leste": {
       "overall": 1369.5,
-      "offense": 1395.5,
-      "defense": 1080.6,
+      "offense": 1416.2,
+      "defense": 1089.0,
       "homeBonus": 0.0,
       "awayPenalty": -0.098
     },
     "Laos": {
       "overall": 1358.9,
-      "offense": 1407.9,
-      "defense": 1101.4,
+      "offense": 1431.1,
+      "defense": 1100.3,
       "homeBonus": -0.069,
       "awayPenalty": -0.057
     },
     "Mauritius": {
       "overall": 1378.2,
-      "offense": 1396.5,
-      "defense": 1218.0,
+      "offense": 1421.1,
+      "defense": 1235.4,
       "homeBonus": -0.029,
       "awayPenalty": -0.062
     },
     "Cook Islands": {
       "overall": 1434.9,
-      "offense": 1454.1,
-      "defense": 1269.5,
+      "offense": 1455.8,
+      "defense": 1265.5,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
     "Solomon Islands": {
       "overall": 1451.8,
-      "offense": 1609.0,
-      "defense": 1147.4,
+      "offense": 1633.2,
+      "defense": 1137.4,
       "homeBonus": -0.031,
       "awayPenalty": -0.034
     },
     "New Caledonia": {
       "overall": 1519.5,
-      "offense": 1647.0,
-      "defense": 1327.1,
+      "offense": 1661.0,
+      "defense": 1320.6,
       "homeBonus": 0.004,
       "awayPenalty": -0.003
     },
     "Fiji": {
       "overall": 1474.0,
-      "offense": 1619.8,
-      "defense": 1182.9,
+      "offense": 1658.6,
+      "defense": 1160.3,
       "homeBonus": -0.002,
       "awayPenalty": -0.048
     },
     "Papua New Guinea": {
       "overall": 1489.0,
-      "offense": 1553.9,
-      "defense": 1229.5,
+      "offense": 1581.2,
+      "defense": 1212.0,
       "homeBonus": -0.007,
       "awayPenalty": -0.014
     },
     "Tahiti": {
       "overall": 1513.7,
-      "offense": 1588.5,
-      "defense": 1360.5,
+      "offense": 1602.0,
+      "defense": 1354.0,
       "homeBonus": 0.004,
       "awayPenalty": -0.01
     },
     "Alderney": {
       "overall": 1476.6,
       "offense": 1490.5,
-      "defense": 1430.9,
+      "defense": 1430.5,
       "homeBonus": -0.027,
       "awayPenalty": 0.0
     },
     "Jersey": {
       "overall": 1570.0,
-      "offense": 1684.6,
-      "defense": 1454.1,
+      "offense": 1695.4,
+      "defense": 1451.3,
       "homeBonus": 0.005,
       "awayPenalty": 0.02
     },
     "Brunei": {
       "overall": 1382.6,
-      "offense": 1409.8,
-      "defense": 1001.2,
+      "offense": 1425.2,
+      "defense": 995.0,
       "homeBonus": -0.044,
       "awayPenalty": -0.057
     },
     "Vanuatu": {
       "overall": 1465.4,
-      "offense": 1534.0,
-      "defense": 1203.9,
+      "offense": 1558.6,
+      "defense": 1186.7,
       "homeBonus": -0.003,
       "awayPenalty": -0.015
     },
     "Guernsey": {
       "overall": 1505.4,
-      "offense": 1518.0,
-      "defense": 1475.7,
+      "offense": 1518.7,
+      "defense": 1475.0,
       "homeBonus": -0.009,
       "awayPenalty": 0.0
     },
@@ -1472,49 +1472,49 @@
     },
     "Biafra": {
       "overall": 1510.6,
-      "offense": 1494.4,
+      "offense": 1494.3,
       "defense": 1502.9,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Saint Lucia": {
       "overall": 1449.7,
-      "offense": 1496.4,
-      "defense": 1172.2,
+      "offense": 1544.0,
+      "defense": 1182.9,
       "homeBonus": -0.023,
       "awayPenalty": -0.029
     },
     "Bonaire": {
       "overall": 1401.9,
-      "offense": 1478.2,
-      "defense": 1216.6,
+      "offense": 1471.8,
+      "defense": 1153.3,
       "homeBonus": -0.051,
       "awayPenalty": 0.013
     },
     "Sint Maarten": {
       "overall": 1511.2,
-      "offense": 1600.5,
-      "defense": 1182.5,
+      "offense": 1586.9,
+      "defense": 1096.4,
       "homeBonus": 0.0,
       "awayPenalty": -0.004
     },
     "Saint Martin": {
       "overall": 1501.1,
-      "offense": 1619.8,
-      "defense": 1310.3,
+      "offense": 1605.5,
+      "defense": 1254.0,
       "homeBonus": 0.007,
       "awayPenalty": -0.022
     },
     "Mapuche": {
       "overall": 1500.3,
-      "offense": 1513.0,
+      "offense": 1512.9,
       "defense": 1488.8,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Maule Sur": {
       "overall": 1519.4,
-      "offense": 1502.4,
+      "offense": 1502.5,
       "defense": 1508.5,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
@@ -1535,169 +1535,169 @@
     },
     "Raetia": {
       "overall": 1510.4,
-      "offense": 1599.5,
-      "defense": 1430.6,
+      "offense": 1601.6,
+      "defense": 1429.6,
       "homeBonus": 0.002,
       "awayPenalty": -0.0
     },
     "Tibet": {
       "overall": 1463.7,
-      "offense": 1568.9,
-      "defense": 1340.4,
+      "offense": 1570.9,
+      "defense": 1335.1,
       "homeBonus": 0.0,
       "awayPenalty": -0.0
     },
     "West Papua": {
       "overall": 1499.7,
-      "offense": 1500.6,
-      "defense": 1494.4,
+      "offense": 1500.8,
+      "defense": 1494.3,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Pakistan": {
       "overall": 1373.3,
-      "offense": 1321.7,
-      "defense": 1131.6,
+      "offense": 1332.7,
+      "defense": 1161.0,
       "homeBonus": -0.034,
       "awayPenalty": -0.051
     },
     "Saint Barth\u00e9lemy": {
       "overall": 1499.3,
-      "offense": 1535.5,
-      "defense": 1476.3,
+      "offense": 1536.1,
+      "defense": 1476.2,
       "homeBonus": 0.006,
       "awayPenalty": -0.011
     },
     "Bhutan": {
       "overall": 1373.0,
-      "offense": 1395.1,
-      "defense": 1158.1,
+      "offense": 1405.8,
+      "defense": 1169.0,
       "homeBonus": -0.008,
       "awayPenalty": -0.046
     },
     "Macau": {
       "overall": 1367.0,
-      "offense": 1403.8,
-      "defense": 1251.9,
+      "offense": 1407.8,
+      "defense": 1267.5,
       "homeBonus": -0.047,
       "awayPenalty": -0.043
     },
     "Ticino": {
       "overall": 1480.1,
-      "offense": 1498.9,
-      "defense": 1399.1,
+      "offense": 1499.3,
+      "defense": 1396.9,
       "homeBonus": -0.014,
       "awayPenalty": -0.01
     },
     "Sz\u00e9kely Land": {
       "overall": 1515.8,
-      "offense": 1554.6,
+      "offense": 1555.4,
       "defense": 1488.7,
       "homeBonus": 0.012,
       "awayPenalty": 0.0
     },
     "Chameria": {
       "overall": 1502.1,
-      "offense": 1531.9,
-      "defense": 1476.5,
+      "offense": 1532.1,
+      "defense": 1476.4,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
     "Two Sicilies": {
       "overall": 1482.1,
-      "offense": 1492.6,
-      "defense": 1430.1,
+      "offense": 1492.7,
+      "defense": 1429.2,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
     "Menorca": {
       "overall": 1480.9,
-      "offense": 1524.9,
-      "defense": 1452.2,
+      "offense": 1525.0,
+      "defense": 1451.0,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Saint Helena": {
       "overall": 1462.2,
-      "offense": 1485.4,
-      "defense": 1366.3,
+      "offense": 1485.5,
+      "defense": 1361.9,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Gozo": {
       "overall": 1494.8,
-      "offense": 1507.6,
-      "defense": 1467.7,
+      "offense": 1508.2,
+      "defense": 1466.5,
       "homeBonus": 0.0,
       "awayPenalty": -0.011
     },
     "Orkney": {
       "overall": 1511.7,
-      "offense": 1554.7,
-      "defense": 1424.2,
+      "offense": 1557.4,
+      "defense": 1420.9,
       "homeBonus": 0.005,
       "awayPenalty": 0.0
     },
     "Greenland": {
       "overall": 1487.9,
-      "offense": 1514.3,
-      "defense": 1399.0,
+      "offense": 1514.6,
+      "defense": 1388.7,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Western Isles": {
       "overall": 1492.7,
-      "offense": 1517.2,
-      "defense": 1460.3,
+      "offense": 1517.5,
+      "defense": 1459.9,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
     "Isle of Man": {
       "overall": 1533.1,
-      "offense": 1680.6,
-      "defense": 1433.3,
+      "offense": 1690.8,
+      "defense": 1430.6,
       "homeBonus": 0.0,
       "awayPenalty": 0.01
     },
     "Falkland Islands": {
       "overall": 1471.2,
-      "offense": 1494.8,
-      "defense": 1396.3,
+      "offense": 1495.1,
+      "defense": 1394.1,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Ynys M\u00f4n": {
       "overall": 1539.5,
-      "offense": 1568.9,
-      "defense": 1466.1,
+      "offense": 1571.3,
+      "defense": 1463.9,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Shetland": {
       "overall": 1512.7,
-      "offense": 1585.9,
-      "defense": 1438.0,
+      "offense": 1589.3,
+      "defense": 1435.5,
       "homeBonus": 0.0,
       "awayPenalty": -0.011
     },
     "\u00c5land Islands": {
       "overall": 1472.1,
-      "offense": 1484.7,
-      "defense": 1439.2,
+      "offense": 1485.0,
+      "defense": 1438.7,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
     "Isle of Wight": {
       "overall": 1521.8,
-      "offense": 1533.9,
-      "defense": 1484.8,
+      "offense": 1534.3,
+      "defense": 1483.6,
       "homeBonus": 0.0,
       "awayPenalty": 0.01
     },
     "Fr\u00f8ya": {
       "overall": 1454.1,
-      "offense": 1503.3,
-      "defense": 1294.4,
+      "offense": 1505.0,
+      "defense": 1283.0,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
@@ -1717,15 +1717,15 @@
     },
     "Tamil Eelam": {
       "overall": 1555.2,
-      "offense": 1622.1,
-      "defense": 1496.9,
+      "offense": 1628.6,
+      "defense": 1496.6,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Hmong": {
       "overall": 1490.9,
-      "offense": 1532.7,
-      "defense": 1420.1,
+      "offense": 1533.0,
+      "defense": 1418.4,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
@@ -1738,92 +1738,92 @@
     },
     "R\u00e9union": {
       "overall": 1496.9,
-      "offense": 1490.5,
-      "defense": 1488.9,
+      "offense": 1487.1,
+      "defense": 1484.1,
       "homeBonus": 0.0,
       "awayPenalty": -0.013
     },
     "North Korea": {
       "overall": 1462.6,
-      "offense": 1482.6,
-      "defense": 1323.3,
+      "offense": 1514.7,
+      "defense": 1327.4,
       "homeBonus": 0.0,
       "awayPenalty": -0.029
     },
     "Samoa": {
       "overall": 1473.4,
-      "offense": 1573.3,
-      "defense": 1291.0,
+      "offense": 1587.9,
+      "defense": 1293.5,
       "homeBonus": 0.011,
       "awayPenalty": -0.029
     },
     "Tuvalu": {
       "overall": 1499.2,
-      "offense": 1534.9,
-      "defense": 1419.7,
+      "offense": 1528.2,
+      "defense": 1399.6,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Tonga": {
       "overall": 1459.1,
-      "offense": 1535.8,
-      "defense": 1328.0,
+      "offense": 1545.9,
+      "defense": 1335.5,
       "homeBonus": -0.028,
       "awayPenalty": -0.009
     },
     "Northern Mariana Islands": {
       "overall": 1481.6,
-      "offense": 1512.9,
-      "defense": 1325.1,
+      "offense": 1503.8,
+      "defense": 1282.6,
       "homeBonus": -0.002,
       "awayPenalty": 0.0
     },
     "American Samoa": {
       "overall": 1426.5,
-      "offense": 1463.7,
-      "defense": 1183.4,
+      "offense": 1468.2,
+      "defense": 1185.2,
       "homeBonus": 0.0,
       "awayPenalty": -0.017
     },
     "Galicia": {
       "overall": 1491.1,
       "offense": 1491.5,
-      "defense": 1488.3,
+      "defense": 1487.4,
       "homeBonus": -0.011,
       "awayPenalty": 0.0
     },
     "Basque Country": {
       "overall": 1511.2,
-      "offense": 1506.2,
-      "defense": 1499.8,
+      "offense": 1506.4,
+      "defense": 1500.0,
       "homeBonus": 0.007,
       "awayPenalty": 0.0
     },
     "Zanzibar": {
       "overall": 1516.7,
-      "offense": 1489.1,
-      "defense": 1499.1,
+      "offense": 1488.6,
+      "defense": 1497.6,
       "homeBonus": 0.009,
       "awayPenalty": 0.0
     },
     "East Turkestan": {
       "overall": 1491.9,
-      "offense": 1535.0,
-      "defense": 1417.4,
+      "offense": 1537.3,
+      "defense": 1414.0,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     },
     "Hitra": {
       "overall": 1501.2,
-      "offense": 1572.2,
-      "defense": 1431.4,
+      "offense": 1577.8,
+      "defense": 1429.8,
       "homeBonus": 0.0,
       "awayPenalty": -0.01
     },
     "Marshall Islands": {
       "overall": 1472.8,
-      "offense": 1492.9,
-      "defense": 1427.2,
+      "offense": 1492.2,
+      "defense": 1420.3,
       "homeBonus": 0.0,
       "awayPenalty": 0.0
     }

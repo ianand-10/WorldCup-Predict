@@ -20,6 +20,7 @@ export interface ScorerPlayer {
   name: string;
   goals: number;
   share: number;
+  weightedGoals?: number;
 }
 
 export interface ScorersData {
@@ -44,15 +45,25 @@ export interface MLModel {
   drawModel: BinaryLogisticModel;
 }
 
+export interface SystemMetrics {
+  poissonAccuracy: number;
+  mlAccuracyHoldout?: number | null;
+  combinedAccuracy: number;
+  holdoutSize: number;
+}
+
 export interface ModelConfig {
   generatedAt: string;
   matchCount: number;
   teamCount: number;
   homeAdvantageGoals: number;
+  fifaBlendWeight?: number;
   eloBlendWeight: number;
   mlBlendWeight: number;
   maxGoals: number;
   dixonColesRho?: number;
+  scorerHalfLifeDays?: number;
+  systemMetrics?: SystemMetrics;
   ml: MLModel | null;
 }
 

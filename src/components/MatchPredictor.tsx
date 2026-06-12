@@ -23,6 +23,7 @@ export default function MatchPredictor() {
   const [venue, setVenue] = useState<VenueType>("neutral");
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [hasPredicted, setHasPredicted] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(false);
 
   const canPredict = teamA && teamB && teamA !== teamB;
 
@@ -67,11 +68,21 @@ export default function MatchPredictor() {
               <p className="font-mono text-sm text-white">
                 {meta.teamCount} teams
               </p>
+              {meta.combinedAccuracy != null && (
+                <p className="font-mono text-[10px] text-accent-gold">
+                  Combined accuracy {(meta.combinedAccuracy * 100).toFixed(1)}%
+                </p>
+              )}
               {meta.mlAccuracy != null && (
                 <p className="font-mono text-[10px] text-accent-emerald">
-                  ML CV accuracy {(meta.mlAccuracy * 100).toFixed(1)}%
+                  ML CV {(meta.mlAccuracy * 100).toFixed(1)}%
                   {meta.mlAccuracyStd != null &&
                     ` ± ${(meta.mlAccuracyStd * 100).toFixed(1)}%`}
+                </p>
+              )}
+              {meta.poissonAccuracy != null && (
+                <p className="font-mono text-[10px] text-muted">
+                  Poisson {(meta.poissonAccuracy * 100).toFixed(1)}%
                 </p>
               )}
             </div>
@@ -137,9 +148,71 @@ export default function MatchPredictor() {
             <div className="hidden lg:flex items-center gap-3 px-2">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-                ELO · Poisson · ML
+                ELO · Poisson · ML · FIFA
               </span>
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            <div className="glass-panel rounded-2xl p-5">
+              <button
+                type="button"
+                onClick={() => setShowMethodology((v) => !v)}
+                className="flex w-full items-center justify-between text-left"
+              >
+                <span className="text-xs font-medium uppercase tracking-widest text-muted-light">
+                  How predictions work
+                </span>
+                <span className="font-mono text-xs text-accent-emerald">
+                  {showMethodology ? "−" : "+"}
+                </span>
+              </button>
+              <AnimatePresence>
+                {showMethodology && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 space-y-3 text-xs leading-relaxed text-muted-light">
+                      <p>
+                        <strong className="text-white">1. Team strength (ELO + FIFA).</strong>{" "}
+                        Each team has offense, defense, and overall ELO ratings built from
+                        every international match since 2021, weighted by tournament
+                        importance. These are blended with current FIFA ranking points so
+                        teams that only beat weaker opponents don&apos;t get overstated.
+                      </p>
+                      <p>
+                        <strong className="text-white">2. Expected goals (Poisson).</strong>{" "}
+                        Offense vs. defense ratings produce expected goals (λ) for each
+                        side, with home advantage and venue bonuses applied. A Dixon-Coles
+                        adjustment corrects low-scoring correlation (0-0, 1-1 draws).
+                      </p>
+                      <p>
+                        <strong className="text-white">3. Scorelines.</strong> All score
+                        combinations up to {8} goals are computed from independent Poisson
+                        distributions, adjusted by ρ={meta.dixonColesRho ?? "−0.01"}.
+                        Probabilities are normalized; the most likely scorelines are shown
+                        in the cascade.
+                      </p>
+                      <p>
+                        <strong className="text-white">4. Win / draw / loss.</strong>{" "}
+                        Poisson scoreline probabilities sum into outcome odds. A separate
+                        ML model (logistic regression on ELO diff, form, head-to-head, rest
+                        days, FIFA gap, and expected-goal diff) calibrates draws and upsets.
+                        Final odds blend Poisson ({((meta.eloBlendWeight ?? 0.55) * 100).toFixed(0)}%)
+                        and ML ({((meta.mlBlendWeight ?? 0.45) * 100).toFixed(0)}%) on
+                        chronological holdout data.
+                      </p>
+                      <p>
+                        <strong className="text-white">5. Likely scorers.</strong>{" "}
+                        Player probabilities use recency-weighted goal shares (12-month
+                        half-life), scaled by the team&apos;s expected goals in this match.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.aside>
 

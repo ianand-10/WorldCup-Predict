@@ -27,6 +27,27 @@ HOME_ADV_GOALS = 0.28
 MAX_GOALS = 8
 DEFAULT_FIFA_POINTS = 1500.0
 MAX_REST_DAYS = 90
+FIFA_BLEND_WEIGHT = 0.3
+ELO_BLEND_WEIGHT = 0.55
+ML_BLEND_WEIGHT = 0.45
+SCORER_HALF_LIFE_DAYS = 365
+
+FIFA_TEAM_ALIASES = {
+    "USA": "United States",
+    "IR Iran": "Iran",
+    "Türkiye": "Turkey",
+    "Korea Republic": "South Korea",
+    "Côte d'Ivoire": "Ivory Coast",
+    "Czechia": "Czech Republic",
+    "Congo DR": "DR Congo",
+    "St. Vincent / Grenadines": "Saint Vincent and the Grenadines",
+    "DPR Korea": "North Korea",
+    "St. Lucia": "Saint Lucia",
+    "St. Kitts and Nevis": "Saint Kitts and Nevis",
+    "Chinese Taipei": "Taiwan",
+    "Kyrgyz Republic": "Kyrgyzstan",
+    "The Gambia": "Gambia",
+}
 
 FEATURE_NAMES = [
     "eloOverallDiff",
@@ -176,25 +197,130 @@ def load_scorers() -> pd.DataFrame:
     return df
 
 
+def normalize_fifa_team_name(name: str) -> str:
+    cleaned = str(name).strip()
+    return FIFA_TEAM_ALIASES.get(cleaned, cleaned)
+
+
+def parse_fifa_rank_value(raw) -> float | None:
+    if pd.isna(raw):
+        return None
+    digits = "".join(ch for ch in str(raw) if ch.isdigit())
+    if not digits:
+        return None
+    return float(digits)
+
+
 def load_fifa_rankings() -> dict[str, float]:
-    path = DATA_DIR / "fifa_rankings.csv"
-    if not path.exists():
-        print("  No fifa_rankings.csv found — using default points for all teams")
+    candidates = [
+        DATA_DIR / "fifa_rankings.csv",
+        ROOT / "fifa rankings - Sheet1.csv",
+    ]
+    existing = [p for p in candidates if p.exists()]
+    if not existing:
+        print("  No FIFA rankings file found — using default points for all teams")
         return {}
 
+    path = max(existing, key=lambda p: sum(1 for _ in open(p, encoding="utf-8")) - 1)
+
     df = pd.read_csv(path)
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    team_col = next((c for c in ("team", "country", "nation") if c in df.columns), None)
+    if team_col is None:
+        print(f"  {path.name} has no team column — skipping FIFA rankings")
+        return {}
+
+    points_col = "points" if "points" in df.columns else None
+    rank_col = "rank" if "rank" in df.columns else None
+
     result: dict[str, float] = {}
     for _, row in df.iterrows():
-        team = str(row["team"]).strip()
-        if "points" in df.columns and pd.notna(row.get("points")):
-            points = float(row["points"])
-        elif "rank" in df.columns and pd.notna(row.get("rank")):
-            points = max(800.0, 2100.0 - float(row["rank"]) * 5.0)
-        else:
+        team = normalize_fifa_team_name(str(row[team_col]).strip())
+        if not team:
+            continue
+
+        points: float | None = None
+        if points_col and pd.notna(row.get(points_col)):
+            points = float(row[points_col])
+        elif rank_col:
+            rank = parse_fifa_rank_value(row.get(rank_col))
+            if rank is not None:
+                points = max(800.0, 2100.0 - rank * 5.0)
+
+        if points is None:
             points = DEFAULT_FIFA_POINTS
+
         result[team] = points
-    print(f"  {len(result)} FIFA rankings loaded")
+
+    print(f"  {len(result)} FIFA rankings loaded from {path.name}")
+
+    normalized_path = DATA_DIR / "fifa_rankings.csv"
+    if path.resolve() != normalized_path.resolve() and result:
+        rows = sorted(
+            (
+                {"team": team, "points": round(points, 2)}
+                for team, points in result.items()
+            ),
+            key=lambda r: r["points"],
+            reverse=True,
+        )
+        pd.DataFrame(rows).to_csv(normalized_path, index=False)
+
     return result
+
+
+def blend_with_fifa(elo_rating: float, fifa_points: float, weight: float) -> float:
+    return (1.0 - weight) * elo_rating + weight * fifa_points
+
+
+def poisson_outcome_probs(
+    lambda_home: float,
+    lambda_away: float,
+    rho: float,
+    max_goals: int = MAX_GOALS,
+) -> tuple[float, float, float]:
+    win_home = draw = win_away = 0.0
+    total = 0.0
+
+    for h in range(max_goals + 1):
+        for a in range(max_goals + 1):
+            tau = dc_tau(h, a, lambda_home, lambda_away, rho)
+            prob = max(0.0, tau) * poisson_pmf(h, lambda_home) * poisson_pmf(a, lambda_away)
+            total += prob
+            if h > a:
+                win_home += prob
+            elif h < a:
+                win_away += prob
+            else:
+                draw += prob
+
+    if total <= 0:
+        return 1 / 3, 1 / 3, 1 / 3
+
+    return win_home / total, draw / total, win_away / total
+
+
+def match_lambdas_with_fifa(
+    hr: TeamRatings,
+    ar: TeamRatings,
+    home: str,
+    away: str,
+    neutral: bool,
+    fifa: dict[str, float],
+    fifa_blend: float,
+) -> tuple[float, float]:
+    home_fifa = fifa.get(home, DEFAULT_FIFA_POINTS)
+    away_fifa = fifa.get(away, DEFAULT_FIFA_POINTS)
+
+    home_off = blend_with_fifa(hr.offense, home_fifa, fifa_blend)
+    home_def = blend_with_fifa(hr.defense, home_fifa, fifa_blend)
+    away_off = blend_with_fifa(ar.offense, away_fifa, fifa_blend)
+    away_def = blend_with_fifa(ar.defense, away_fifa, fifa_blend)
+
+    venue_boost = 0.0 if neutral else HOME_ADV_GOALS
+    exp_home = goal_expectation(home_off, away_def, venue_boost + hr.home_bonus)
+    exp_away = goal_expectation(away_off, home_def, ar.away_penalty)
+    return exp_home, exp_away
 
 
 def h2h_rate_for_team(pair_stats: dict[str, list[float]], team: str) -> float:
@@ -274,6 +400,11 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         )
 
         outcome = 0 if hs > aws else (2 if hs < aws else 1)
+
+        exp_home_goals, exp_away_goals = match_lambdas_with_fifa(
+            hr, ar, home, away, neutral, fifa, FIFA_BLEND_WEIGHT
+        )
+
         ml_rows.append(
             {
                 **features,
@@ -281,12 +412,20 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
                 "isDraw": 1 if hs == aws else 0,
                 "homeWinNotDraw": 1 if hs > aws else 0,
                 "sampleWeight": sample_weight,
+                "expHomeGoals": exp_home_goals,
+                "expAwayGoals": exp_away_goals,
+                "isNeutral": neutral,
+                "homeOffense": hr.offense,
+                "homeDefense": hr.defense,
+                "awayOffense": ar.offense,
+                "awayDefense": ar.defense,
+                "homeBonus": hr.home_bonus,
+                "awayPenalty": ar.away_penalty,
+                "homeFifa": fifa.get(home, DEFAULT_FIFA_POINTS),
+                "awayFifa": fifa.get(away, DEFAULT_FIFA_POINTS),
             }
         )
 
-        venue_boost = 0.0 if neutral else HOME_ADV_GOALS
-        exp_home_goals = goal_expectation(hr.offense, ar.defense, venue_boost + hr.home_bonus)
-        exp_away_goals = goal_expectation(ar.offense, hr.defense, ar.away_penalty)
         dc_samples.append((exp_home_goals, exp_away_goals, hs, aws))
 
         exp_home_result = expected_score(hr.overall, ar.overall)
@@ -367,8 +506,12 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         "form": live_form,
         "lastMatchDate": live_last_match,
         "h2h": live_h2h,
-        "fifaPoints": {team: round(fifa.get(team, DEFAULT_FIFA_POINTS), 1) for team in teams},
+        "fifaPoints": {
+            team: round(fifa.get(team, DEFAULT_FIFA_POINTS), 1) for team in teams
+        },
     }
+    for team, points in fifa.items():
+        live_state["fifaPoints"][team] = round(points, 1)
 
     return elos, history, ml_rows, dc_samples, live_state
 
@@ -526,23 +669,175 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     }
 
 
+def lambdas_from_row(row: dict, fifa_blend: float) -> tuple[float, float]:
+    neutral = bool(row["isNeutral"])
+    home_off = blend_with_fifa(row["homeOffense"], row["homeFifa"], fifa_blend)
+    home_def = blend_with_fifa(row["homeDefense"], row["homeFifa"], fifa_blend)
+    away_off = blend_with_fifa(row["awayOffense"], row["awayFifa"], fifa_blend)
+    away_def = blend_with_fifa(row["awayDefense"], row["awayFifa"], fifa_blend)
+    venue_boost = 0.0 if neutral else HOME_ADV_GOALS
+    exp_home = goal_expectation(home_off, away_def, venue_boost + row["homeBonus"])
+    exp_away = goal_expectation(away_off, home_def, row["awayPenalty"])
+    return exp_home, exp_away
+
+
+def evaluate_system_accuracy(
+    ml_rows: list[dict],
+    ml_meta: dict | None,
+    dixon_coles_rho: float,
+    fifa_blend: float,
+    elo_blend: float,
+    ml_blend: float,
+) -> dict[str, float]:
+    split_idx = int(len(ml_rows) * 0.85)
+    holdout = ml_rows[split_idx:]
+    if len(holdout) < 50:
+        return {}
+
+    y_true = np.array([r["outcome"] for r in holdout])
+    poisson_probs = np.zeros((len(holdout), 3))
+    ml_probs = np.zeros((len(holdout), 3))
+    ensemble_probs = np.zeros((len(holdout), 3))
+
+    draw_blend = ml_meta.get("drawBlendWeight", 0.35) if ml_meta else 0.35
+
+    if ml_meta:
+        X = np.array([[r[f] for f in FEATURE_NAMES] for r in holdout])
+        mean = np.array(ml_meta["scalerMean"])
+        scale = np.array(ml_meta["scalerScale"])
+        X_scaled = (X - mean) / np.where(scale == 0, 1, scale)
+
+        coef = np.array(ml_meta["outcomeModel"]["coefficients"])
+        intercepts = np.array(ml_meta["outcomeModel"]["intercepts"])
+        logits = intercepts + X_scaled @ coef.T
+        logits -= logits.max(axis=1, keepdims=True)
+        base = np.exp(logits)
+        base /= base.sum(axis=1, keepdims=True)
+
+        draw_coef = np.array(ml_meta["drawModel"]["coefficients"])
+        draw_intercept = ml_meta["drawModel"]["intercept"]
+        draw_logit = draw_intercept + X_scaled @ draw_coef
+        p_draw_specialist = 1.0 / (1.0 + np.exp(-draw_logit))
+
+        ml_probs = base.copy()
+        ml_probs[:, 1] = (1.0 - draw_blend) * base[:, 1] + draw_blend * p_draw_specialist
+        ml_probs /= ml_probs.sum(axis=1, keepdims=True)
+
+    for i, row in enumerate(holdout):
+        exp_home, exp_away = lambdas_from_row(row, fifa_blend)
+        wh, dr, wa = poisson_outcome_probs(exp_home, exp_away, dixon_coles_rho)
+        poisson_probs[i] = [wh, dr, wa]
+
+        if ml_meta:
+            ensemble_probs[i] = elo_blend * poisson_probs[i] + ml_blend * ml_probs[i]
+            ensemble_probs[i] /= ensemble_probs[i].sum()
+        else:
+            ensemble_probs[i] = poisson_probs[i]
+
+    return {
+        "poissonAccuracy": round(outcome_accuracy(y_true, poisson_probs), 4),
+        "mlAccuracyHoldout": round(outcome_accuracy(y_true, ml_probs), 4) if ml_meta else None,
+        "combinedAccuracy": round(outcome_accuracy(y_true, ensemble_probs), 4),
+        "holdoutSize": len(holdout),
+    }
+
+
+def tune_blend_weights(
+    ml_rows: list[dict],
+    ml_meta: dict | None,
+    dixon_coles_rho: float,
+) -> tuple[float, float, float]:
+    if not ml_meta or len(ml_rows) < 500:
+        return FIFA_BLEND_WEIGHT, ELO_BLEND_WEIGHT, ML_BLEND_WEIGHT
+
+    split_idx = int(len(ml_rows) * 0.85)
+    holdout = ml_rows[split_idx:]
+    y_true = np.array([r["outcome"] for r in holdout])
+
+    best_fifa = FIFA_BLEND_WEIGHT
+    best_elo = ELO_BLEND_WEIGHT
+    best_ml = ML_BLEND_WEIGHT
+    best_acc = -1.0
+
+    X = np.array([[r[f] for f in FEATURE_NAMES] for r in holdout])
+    mean = np.array(ml_meta["scalerMean"])
+    scale = np.array(ml_meta["scalerScale"])
+    X_scaled = (X - mean) / np.where(scale == 0, 1, scale)
+
+    coef = np.array(ml_meta["outcomeModel"]["coefficients"])
+    intercepts = np.array(ml_meta["outcomeModel"]["intercepts"])
+    logits = intercepts + X_scaled @ coef.T
+    logits -= logits.max(axis=1, keepdims=True)
+    base = np.exp(logits)
+    base /= base.sum(axis=1, keepdims=True)
+    draw_blend = ml_meta.get("drawBlendWeight", 0.35)
+    draw_coef = np.array(ml_meta["drawModel"]["coefficients"])
+    draw_intercept = ml_meta["drawModel"]["intercept"]
+    draw_logit = draw_intercept + X_scaled @ draw_coef
+    p_draw_specialist = 1.0 / (1.0 + np.exp(-draw_logit))
+    ml_probs = base.copy()
+    ml_probs[:, 1] = (1.0 - draw_blend) * base[:, 1] + draw_blend * p_draw_specialist
+    ml_probs /= ml_probs.sum(axis=1, keepdims=True)
+
+    poisson_by_fifa: dict[float, np.ndarray] = {}
+    for fifa_blend in (0.2, 0.25, 0.3, 0.35, 0.4):
+        probs = np.zeros((len(holdout), 3))
+        for i, row in enumerate(holdout):
+            exp_home, exp_away = lambdas_from_row(row, fifa_blend)
+            wh, dr, wa = poisson_outcome_probs(exp_home, exp_away, dixon_coles_rho)
+            probs[i] = [wh, dr, wa]
+        poisson_by_fifa[fifa_blend] = probs
+
+    for fifa_blend, poisson_probs in poisson_by_fifa.items():
+        for elo_w in (0.45, 0.5, 0.55, 0.6, 0.65):
+            ml_w = 1.0 - elo_w
+            ensemble = elo_w * poisson_probs + ml_w * ml_probs
+            ensemble /= ensemble.sum(axis=1, keepdims=True)
+            acc = outcome_accuracy(y_true, ensemble)
+            if acc > best_acc:
+                best_acc = acc
+                best_fifa = fifa_blend
+                best_elo = elo_w
+                best_ml = ml_w
+
+    print(
+        f"  Tuned blends — FIFA: {best_fifa:.2f}, Poisson: {best_elo:.2f}, ML: {best_ml:.2f} "
+        f"(holdout acc {best_acc:.3f})"
+    )
+    return best_fifa, best_elo, best_ml
+
+
 def build_scorer_stats(scorers: pd.DataFrame) -> dict:
     valid = scorers[~scorers["own_goal"]].copy()
-    team_goals = valid.groupby("team").size().to_dict()
+    reference_date = valid["date"].max()
+    recent_cutoff = reference_date - pd.Timedelta(days=365)
+    decay = math.log(2) / SCORER_HALF_LIFE_DAYS
 
     result: dict[str, list] = {}
     for team, group in valid.groupby("team"):
-        total = team_goals.get(team, 0)
-        if total == 0:
+        weighted: dict[str, float] = defaultdict(float)
+        recent_counts: dict[str, int] = defaultdict(int)
+        total_weight = 0.0
+
+        for _, goal in group.iterrows():
+            days_ago = max(0, (reference_date - goal["date"]).days)
+            weight = math.exp(-days_ago * decay)
+            weighted[goal["scorer"]] += weight
+            total_weight += weight
+            if goal["date"] >= recent_cutoff:
+                recent_counts[goal["scorer"]] += 1
+
+        if total_weight <= 0:
             continue
-        counts = group["scorer"].value_counts()
+
         players = []
-        for name, count in counts.head(15).items():
+        for name, score in sorted(weighted.items(), key=lambda x: x[1], reverse=True)[:15]:
             players.append(
                 {
                     "name": name,
-                    "goals": int(count),
-                    "share": round(count / total, 4),
+                    "goals": recent_counts.get(name, 0),
+                    "weightedGoals": round(score, 2),
+                    "share": round(score / total_weight, 4),
                 }
             )
         result[team] = players
@@ -573,6 +868,17 @@ def main():
     print("Training ML models (multinomial logistic + draw calibration + time-series CV)...")
     ml_meta = train_ml_models(ml_rows)
 
+    fifa_blend, elo_blend, ml_blend = tune_blend_weights(ml_rows, ml_meta, dixon_coles_rho)
+    system_metrics = evaluate_system_accuracy(
+        ml_rows, ml_meta, dixon_coles_rho, fifa_blend, elo_blend, ml_blend
+    )
+    if system_metrics:
+        print(
+            f"  Holdout accuracy — Poisson: {system_metrics['poissonAccuracy']:.3f}, "
+            f"ML: {system_metrics.get('mlAccuracyHoldout', 0):.3f}, "
+            f"Combined: {system_metrics['combinedAccuracy']:.3f}"
+        )
+
     print("Building scorer stats...")
     scorers = load_scorers()
     scorer_stats = build_scorer_stats(scorers)
@@ -585,10 +891,13 @@ def main():
         "matchCount": len(matches),
         "teamCount": len(elos),
         "homeAdvantageGoals": HOME_ADV_GOALS,
-        "eloBlendWeight": 0.6,
-        "mlBlendWeight": 0.4,
+        "fifaBlendWeight": fifa_blend,
+        "eloBlendWeight": elo_blend,
+        "mlBlendWeight": ml_blend,
         "maxGoals": MAX_GOALS,
         "dixonColesRho": dixon_coles_rho,
+        "scorerHalfLifeDays": SCORER_HALF_LIFE_DAYS,
+        "systemMetrics": system_metrics,
         "ml": ml_meta,
     }
 
