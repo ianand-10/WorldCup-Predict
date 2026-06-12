@@ -8,6 +8,8 @@
   --accent-gold: #f5c542;
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-bg: rgba(18, 18, 26, 0.65);
+  --font-geist-sans: "Segoe UI", "Inter", system-ui, sans-serif;
+  --font-geist-mono: "Cascadia Mono", "Consolas", monospace;
 }
 
 * {

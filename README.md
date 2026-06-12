@@ -83,11 +83,11 @@ You can also trigger **Rebuild Model Data** from the Actions tab (runs when `dat
 1. **ELO ratings** are computed chronologically from 2021 match results, with separate offensive/defensive/venue dimensions
 2. **Expected goals (xG)** are derived from offensive vs defensive ELO differentials plus home advantage
 3. **Poisson distribution** generates scoreline probabilities from xG values
-4. **Two-stage gradient boosting ML** (draw model + home-win model) with time-series cross-validation calibrates win/draw/loss probabilities
-5. **Final output** = 60% ELO/Poisson + 40% ML blend
+4. **ML model bake-off** compares multinomial logistic calibration against a compact random forest using time-series cross-validation and chronological holdout
+5. **Final output** blends ELO/Poisson and the selected ML model with holdout-tuned weights
 6. **Goalscorers** = team xG × player's historical goal share
 
-Features used at prediction time include live form, head-to-head, days since last match (from CSV), and FIFA rankings (`data/fifa_rankings.csv`).
+Features used at prediction time include live form, head-to-head, FIFA ranking strength, FIFA/ELO agreement, blended FIFA/ELO rating gaps, and expected-goal differentials.
 
 ## Project Structure
 

@@ -3,6 +3,19 @@ export interface BinaryLogisticModel {
   intercept: number;
 }
 
+export interface SerializedTree {
+  childrenLeft: number[];
+  childrenRight: number[];
+  feature: number[];
+  threshold: number[];
+  value: number[][];
+}
+
+export interface RandomForestModel {
+  classes: number[];
+  trees: SerializedTree[];
+}
+
 export interface TeamRatings {
   overall: number;
   offense: number;
@@ -34,14 +47,27 @@ export interface MLModel {
   accuracy: number;
   accuracyStd?: number;
   holdoutAccuracy?: number;
+  holdoutLogLoss?: number;
   cvFolds?: number;
   drawBlendWeight?: number;
+  candidateResults?: Record<
+    string,
+    {
+      cvAccuracy?: number | null;
+      cvLogLoss?: number | null;
+      holdoutAccuracy: number;
+      holdoutLogLoss: number;
+      drawBlendWeight?: number;
+    }
+  >;
   scalerMean: number[];
   scalerScale: number[];
-  outcomeModel: {
-    coefficients: number[][];
-    intercepts: number[];
-  };
+  outcomeModel:
+    | {
+        coefficients: number[][];
+        intercepts: number[];
+      }
+    | RandomForestModel;
   drawModel: BinaryLogisticModel;
 }
 

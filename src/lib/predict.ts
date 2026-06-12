@@ -9,6 +9,7 @@ import type {
   LiveState,
   ModelConfig,
   PredictionResult,
+  RandomForestModel,
   ScorersData,
   TeamRatings,
   TeamsData,
@@ -21,7 +22,6 @@ const scorers = scorersData as ScorersData;
 const config = modelConfig as ModelConfig;
 const liveState = liveStateData as LiveState;
 
-const MAX_REST_DAYS = 90;
 const DEFAULT_FIFA_POINTS = 1500;
 
 export function getTeamList(): string[] {
@@ -62,19 +62,6 @@ function pairKey(teamA: string, teamB: string): string {
   return [teamA, teamB].sort().join("|");
 }
 
-function normalizeRestDays(days: number): number {
-  return Math.min(Math.max(days, 0), MAX_REST_DAYS) / MAX_REST_DAYS;
-}
-
-function daysSinceLastMatch(team: string): number {
-  const ref = new Date(liveState.referenceDate);
-  const last = liveState.lastMatchDate[team];
-  if (!last) return 14;
-  const lastDate = new Date(last);
-  const diff = (ref.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-  return Math.min(Math.max(diff, 0), MAX_REST_DAYS);
-}
-
 function h2hRateForTeam(teamA: string, teamB: string, forTeam: string): number {
   const key = pairKey(teamA, teamB);
   const entry = liveState.h2h[key];
@@ -101,9 +88,6 @@ function buildFeatureVector(
   ratingsHome: TeamRatings,
   ratingsAway: TeamRatings
 ): number[] {
-  const homeDays = daysSinceLastMatch(homeTeam);
-  const awayDays = daysSinceLastMatch(awayTeam);
-
   const venueBoost = isNeutral ? 0 : config.homeAdvantageGoals;
   const expHome = goalExpectation(
     ratingsHome.offense,
@@ -115,23 +99,79 @@ function buildFeatureVector(
     ratingsHome.defense,
     ratingsAway.awayPenalty
   );
+  const homeFifa = fifaPoints(homeTeam);
+  const awayFifa = fifaPoints(awayTeam);
+  const fifaBlendWeight = config.fifaBlendWeight ?? 0.3;
+  const blendedHomeOverall = blendWithFifa(
+    ratingsHome.overall,
+    homeFifa,
+    fifaBlendWeight
+  );
+  const blendedAwayOverall = blendWithFifa(
+    ratingsAway.overall,
+    awayFifa,
+    fifaBlendWeight
+  );
+  const blendedHomeOffense = blendWithFifa(
+    ratingsHome.offense,
+    homeFifa,
+    fifaBlendWeight
+  );
+  const blendedHomeDefense = blendWithFifa(
+    ratingsHome.defense,
+    homeFifa,
+    fifaBlendWeight
+  );
+  const blendedAwayOffense = blendWithFifa(
+    ratingsAway.offense,
+    awayFifa,
+    fifaBlendWeight
+  );
+  const blendedAwayDefense = blendWithFifa(
+    ratingsAway.defense,
+    awayFifa,
+    fifaBlendWeight
+  );
+  const expHomeFifa = goalExpectation(
+    blendedHomeOffense,
+    blendedAwayDefense,
+    isNeutral ? 0 : venueBoost + ratingsHome.homeBonus
+  );
+  const expAwayFifa = goalExpectation(
+    blendedAwayOffense,
+    blendedHomeDefense,
+    ratingsAway.awayPenalty
+  );
+  const eloDiff = ratingsHome.overall - ratingsAway.overall;
+  const fifaDiff = homeFifa - awayFifa;
+  const homeForm = liveState.form[homeTeam] ?? 0.5;
+  const awayForm = liveState.form[awayTeam] ?? 0.5;
+  const ratingAgreement =
+    eloDiff === 0 || fifaDiff === 0 || eloDiff * fifaDiff > 0 ? 1 : 0;
 
   return [
-    ratingsHome.overall - ratingsAway.overall,
+    eloDiff,
     ratingsHome.offense - ratingsAway.offense,
     ratingsHome.defense - ratingsAway.defense,
-    Math.abs(ratingsHome.overall - ratingsAway.overall),
+    Math.abs(eloDiff),
     isNeutral ? 0 : 1,
     isNeutral ? 0 : ratingsHome.homeBonus - ratingsAway.awayPenalty,
-    liveState.form[homeTeam] ?? 0.5,
-    liveState.form[awayTeam] ?? 0.5,
+    homeForm,
+    awayForm,
+    homeForm - awayForm,
     h2hRateForTeam(homeTeam, awayTeam, homeTeam),
-    normalizeRestDays(homeDays),
-    normalizeRestDays(awayDays),
-    (homeDays - awayDays) / MAX_REST_DAYS,
-    fifaPoints(homeTeam) - fifaPoints(awayTeam),
+    homeFifa,
+    awayFifa,
+    fifaDiff,
+    Math.abs(fifaDiff),
+    blendedHomeOverall - blendedAwayOverall,
+    blendedHomeOffense - blendedAwayOffense,
+    blendedHomeDefense - blendedAwayDefense,
     expHome - expAway,
+    expHomeFifa - expAwayFifa,
     Math.abs(expHome - expAway) < 0.45 ? 1 : 0,
+    ratingAgreement,
+    1 - ratingAgreement,
   ];
 }
 
@@ -157,20 +197,65 @@ function binaryLogisticProbability(
   return sigmoid(logit);
 }
 
+function isForestModel(
+  model: NonNullable<ModelConfig["ml"]>["outcomeModel"]
+): model is RandomForestModel {
+  return "trees" in model;
+}
+
+function forestPredictProbability(
+  model: RandomForestModel,
+  features: number[]
+): number[] {
+  const totals = [0, 0, 0];
+
+  for (const tree of model.trees) {
+    let node = 0;
+    while (tree.childrenLeft[node] !== -1) {
+      const featureIndex = tree.feature[node];
+      node =
+        features[featureIndex] <= tree.threshold[node]
+          ? tree.childrenLeft[node]
+          : tree.childrenRight[node];
+    }
+
+    const counts = tree.value[node];
+    const sum = counts.reduce((acc, value) => acc + value, 0);
+    if (sum <= 0) continue;
+
+    model.classes.forEach((klass, rawIndex) => {
+      totals[klass] += counts[rawIndex] / sum;
+    });
+  }
+
+  const treeCount = Math.max(1, model.trees.length);
+  const averaged = totals.map((value) => value / treeCount);
+  const total = averaged.reduce((acc, value) => acc + value, 0);
+  return total > 0 ? averaged.map((value) => value / total) : [1 / 3, 1 / 3, 1 / 3];
+}
+
 function mlPredictFromHomePerspective(
   scaled: number[]
 ): { winHome: number; draw: number; winAway: number } | null {
   const ml = config.ml;
   if (!ml?.outcomeModel || !ml?.drawModel) return null;
 
-  const logits = ml.outcomeModel.intercepts.map((intercept, c) =>
-    intercept +
-    ml.outcomeModel.coefficients[c].reduce(
-      (sum, coef, i) => sum + coef * scaled[i],
-      0
-    )
-  );
-  const base = softmax(logits);
+  let base: number[];
+  if (isForestModel(ml.outcomeModel)) {
+    base = forestPredictProbability(ml.outcomeModel, scaled);
+  } else {
+    const linearModel = ml.outcomeModel;
+    base = softmax(
+      linearModel.intercepts.map(
+        (intercept, c) =>
+          intercept +
+          linearModel.coefficients[c].reduce(
+            (sum, coef, i) => sum + coef * scaled[i],
+            0
+          )
+      )
+    );
+  }
 
   const drawBlend = ml.drawBlendWeight ?? 0.35;
   const pDrawSpecialist = binaryLogisticProbability(ml.drawModel, scaled);
