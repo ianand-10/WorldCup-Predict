@@ -18,6 +18,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.preprocessing import StandardScaler
+import xgboost as xgb
+import lightgbm as lgb
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
@@ -32,6 +34,12 @@ FIFA_BLEND_WEIGHT = 0.3
 ELO_BLEND_WEIGHT = 0.55
 ML_BLEND_WEIGHT = 0.45
 SCORER_HALF_LIFE_DAYS = 365
+DIXON_COLES_RHO_MIN = -0.15
+DIXON_COLES_RHO_MAX = -0.01
+DRAW_PROB_FLOOR = 0.18
+CLOSE_MATCH_THRESHOLD = 0.35
+REST_DAYS_HALF_LIFE = 7
+ELO_OPPONENT_STRENGTH_WEIGHT = 0.4
 
 FIFA_TEAM_ALIASES = {
     "USA": "United States",
@@ -73,6 +81,7 @@ FEATURE_NAMES = [
     "closeMatchIndicator",
     "ratingAgreement",
     "fifaEloDisagreement",
+    "restDaysDiff",
 ]
 
 TOURNAMENT_WEIGHT = {
@@ -179,6 +188,9 @@ class TeamRatings:
         self.defense = INITIAL_ELO
         self.home_bonus = 0.0
         self.away_penalty = 0.0
+        self.last_match_date = None
+        self.opponent_strength_sum = 0.0
+        self.opponent_count = 0
 
 
 def load_matches() -> pd.DataFrame:
@@ -338,6 +350,18 @@ def h2h_rate_for_team(pair_stats: dict[str, list[float]], team: str) -> float:
     return float(np.mean(values)) if values else 0.5
 
 
+def rest_days_boost(last_date: pd.Timestamp | None, match_date: pd.Timestamp) -> float:
+    """Calculate a small boost for teams with more rest days (up to ~7 days)."""
+    if last_date is None:
+        return 0.0
+    rest_days = (match_date - last_date).days
+    if rest_days <= 0:
+        return 0.0
+    decay = math.log(2) / REST_DAYS_HALF_LIFE
+    boost = 0.03 * (1.0 - math.exp(-rest_days * decay))
+    return min(boost, 0.035)
+
+
 def build_match_features(
     home: str,
     away: str,
@@ -354,8 +378,12 @@ def build_match_features(
     pair_stats = h2h_pair.get(pk, {})
 
     venue_boost = 0.0 if neutral else HOME_ADV_GOALS
-    exp_home = goal_expectation(hr.offense, ar.defense, venue_boost + hr.home_bonus)
-    exp_away = goal_expectation(ar.offense, hr.defense, ar.away_penalty)
+    
+    home_rest_boost = rest_days_boost(hr.last_match_date, match_date)
+    away_rest_boost = rest_days_boost(ar.last_match_date, match_date)
+    
+    exp_home = goal_expectation(hr.offense, ar.defense, venue_boost + hr.home_bonus + home_rest_boost)
+    exp_away = goal_expectation(ar.offense, hr.defense, ar.away_penalty + away_rest_boost)
 
     home_fifa = fifa.get(home, DEFAULT_FIFA_POINTS)
     away_fifa = fifa.get(away, DEFAULT_FIFA_POINTS)
@@ -366,15 +394,19 @@ def build_match_features(
     blended_away_off = blend_with_fifa(ar.offense, away_fifa, FIFA_BLEND_WEIGHT)
     blended_away_def = blend_with_fifa(ar.defense, away_fifa, FIFA_BLEND_WEIGHT)
     exp_home_fifa = goal_expectation(
-        blended_home_off, blended_away_def, venue_boost + hr.home_bonus
+        blended_home_off, blended_away_def, venue_boost + hr.home_bonus + home_rest_boost
     )
-    exp_away_fifa = goal_expectation(blended_away_off, blended_home_def, ar.away_penalty)
+    exp_away_fifa = goal_expectation(blended_away_off, blended_home_def, ar.away_penalty + away_rest_boost)
 
     elo_diff = hr.overall - ar.overall
     fifa_diff = home_fifa - away_fifa
     home_form = recent_form(form[home])
     away_form = recent_form(form[away])
     rating_agreement = 1.0 if elo_diff == 0 or fifa_diff == 0 or elo_diff * fifa_diff > 0 else 0.0
+    
+    home_rest_days = (match_date - hr.last_match_date).days if hr.last_match_date else None
+    away_rest_days = (match_date - ar.last_match_date).days if ar.last_match_date else None
+    rest_days_diff = (home_rest_days or 0) - (away_rest_days or 0)
 
     return {
         "eloOverallDiff": elo_diff,
@@ -396,9 +428,10 @@ def build_match_features(
         "blendedDefenseDiff": blended_home_def - blended_away_def,
         "expectedGoalDiff": exp_home - exp_away,
         "expectedGoalDiffFifaBlend": exp_home_fifa - exp_away_fifa,
-        "closeMatchIndicator": 1.0 if abs(exp_home - exp_away) < 0.45 else 0.0,
+        "closeMatchIndicator": 1.0 if abs(exp_home - exp_away) < CLOSE_MATCH_THRESHOLD else 0.0,
         "ratingAgreement": rating_agreement,
         "fifaEloDisagreement": 1.0 - rating_agreement,
+        "restDaysDiff": float(rest_days_diff),
     }
 
 
@@ -422,6 +455,9 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         sample_weight = tournament_weight(tournament)
 
         hr, ar = teams[home], teams[away]
+
+        home_elo_for_strength = blend_with_fifa(hr.overall, fifa.get(home, DEFAULT_FIFA_POINTS), ELO_OPPONENT_STRENGTH_WEIGHT)
+        away_elo_for_strength = blend_with_fifa(ar.overall, fifa.get(away, DEFAULT_FIFA_POINTS), ELO_OPPONENT_STRENGTH_WEIGHT)
 
         features = build_match_features(
             home, away, neutral, hr, ar, form, h2h_pair, last_match, match_date, fifa
@@ -456,22 +492,27 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
 
         dc_samples.append((exp_home_goals, exp_away_goals, hs, aws))
 
+        avg_opponent_elo = (home_elo_for_strength + away_elo_for_strength) / 2.0
+        
         exp_home_result = expected_score(hr.overall, ar.overall)
         if not neutral:
             exp_home_result = expected_score(hr.overall + 65, ar.overall)
 
         actual_home, actual_away = outcome_points(hs, aws)
 
-        hr.overall += k * (actual_home - exp_home_result)
-        ar.overall += k * (actual_away - (1 - exp_home_result))
+        opponent_quality_factor = 1.0 + ELO_OPPONENT_STRENGTH_WEIGHT * ((avg_opponent_elo - INITIAL_ELO) / 400.0)
+        opponent_quality_factor = max(0.7, min(1.3, opponent_quality_factor))
+
+        hr.overall += k * (actual_home - exp_home_result) * opponent_quality_factor
+        ar.overall += k * (actual_away - (1 - exp_home_result)) * opponent_quality_factor
 
         off_k = k * 0.85
         def_k = k * 0.85
 
-        hr.offense += off_k * ((hs / max(exp_home_goals, 0.5)) - 1.0) * 0.5
-        ar.offense += off_k * ((aws / max(exp_away_goals, 0.5)) - 1.0) * 0.5
-        hr.defense += def_k * ((1.0 - aws / max(exp_away_goals, 0.5)) - 0.5) * 0.5
-        ar.defense += def_k * ((1.0 - hs / max(exp_home_goals, 0.5)) - 0.5) * 0.5
+        hr.offense += off_k * ((hs / max(exp_home_goals, 0.5)) - 1.0) * 0.5 * opponent_quality_factor
+        ar.offense += off_k * ((aws / max(exp_away_goals, 0.5)) - 1.0) * 0.5 * opponent_quality_factor
+        hr.defense += def_k * ((1.0 - aws / max(exp_away_goals, 0.5)) - 0.5) * 0.5 * opponent_quality_factor
+        ar.defense += def_k * ((1.0 - hs / max(exp_home_goals, 0.5)) - 0.5) * 0.5 * opponent_quality_factor
 
         if not neutral:
             home_perf = actual_home - exp_home_result
@@ -489,6 +530,14 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         away_result = 1.0 if aws > hs else (0.5 if hs == aws else 0.0)
         h2h_pair[pk][home].append(home_result)
         h2h_pair[pk][away].append(away_result)
+
+        hr.last_match_date = match_date
+        ar.last_match_date = match_date
+        
+        hr.opponent_strength_sum += avg_opponent_elo
+        hr.opponent_count += 1
+        ar.opponent_strength_sum += avg_opponent_elo
+        ar.opponent_count += 1
 
         last_match[home] = match_date
         last_match[away] = match_date
@@ -546,13 +595,13 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
 
 def estimate_dixon_coles_rho(samples: list[tuple[float, float, int, int]]) -> float:
     if len(samples) < 100:
-        return -0.13
+        return -0.08
 
     subset = samples[-3000:]
-    best_rho = -0.13
+    best_rho = -0.08
     best_ll = -float("inf")
 
-    for rho in np.linspace(-0.25, -0.01, 25):
+    for rho in np.linspace(DIXON_COLES_RHO_MIN, DIXON_COLES_RHO_MAX, 25):
         ll = 0.0
         for lh, la, hs, aws in subset:
             tau = dc_tau(hs, aws, lh, la, rho)
@@ -605,6 +654,64 @@ def fit_random_forest_with_draw_calibration(
         class_weight="balanced_subsample",
         random_state=42,
         n_jobs=-1,
+    )
+    draw_model = LogisticRegression(
+        max_iter=1500,
+        class_weight="balanced",
+        C=0.7,
+        random_state=42,
+    )
+    outcome_model.fit(X_scaled, y_outcome, sample_weight=weights)
+    draw_model.fit(X_scaled, y_draw, sample_weight=weights)
+    return outcome_model, draw_model
+
+
+def fit_xgboost_with_draw_calibration(
+    X_scaled: np.ndarray,
+    y_outcome: np.ndarray,
+    y_draw: np.ndarray,
+    weights: np.ndarray,
+) -> tuple[xgb.XGBClassifier, LogisticRegression]:
+    outcome_model = xgb.XGBClassifier(
+        n_estimators=150,
+        max_depth=5,
+        learning_rate=0.08,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        reg_alpha=0.1,
+        reg_lambda=1.0,
+        random_state=42,
+        n_jobs=-1,
+        eval_metric="mlogloss",
+    )
+    draw_model = LogisticRegression(
+        max_iter=1500,
+        class_weight="balanced",
+        C=0.7,
+        random_state=42,
+    )
+    outcome_model.fit(X_scaled, y_outcome, sample_weight=weights)
+    draw_model.fit(X_scaled, y_draw, sample_weight=weights)
+    return outcome_model, draw_model
+
+
+def fit_lightgbm_with_draw_calibration(
+    X_scaled: np.ndarray,
+    y_outcome: np.ndarray,
+    y_draw: np.ndarray,
+    weights: np.ndarray,
+) -> tuple[lgb.LGBMClassifier, LogisticRegression]:
+    outcome_model = lgb.LGBMClassifier(
+        n_estimators=150,
+        max_depth=6,
+        learning_rate=0.08,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        reg_alpha=0.1,
+        reg_lambda=1.0,
+        random_state=42,
+        n_jobs=-1,
+        verbose=-1,
     )
     draw_model = LogisticRegression(
         max_iter=1500,
@@ -730,6 +837,10 @@ def ml_probs_from_meta(ml_meta: dict, rows: list[dict]) -> np.ndarray:
 def fit_candidate_model(kind: str, X, y_outcome, y_draw, weights):
     if kind == "random_forest_with_draw_calibration":
         return fit_random_forest_with_draw_calibration(X, y_outcome, y_draw, weights)
+    elif kind == "xgboost_with_draw_calibration":
+        return fit_xgboost_with_draw_calibration(X, y_outcome, y_draw, weights)
+    elif kind == "lightgbm_with_draw_calibration":
+        return fit_lightgbm_with_draw_calibration(X, y_outcome, y_draw, weights)
     return fit_multinomial_with_draw_calibration(X, y_outcome, y_draw, weights)
 
 
@@ -774,6 +885,8 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     candidates = [
         "multinomial_with_draw_calibration",
         "random_forest_with_draw_calibration",
+        "xgboost_with_draw_calibration",
+        "lightgbm_with_draw_calibration",
     ]
     candidate_results: dict[str, dict[str, list[float] | float]] = {
         kind: {"cvAccuracy": [], "cvLogLoss": []} for kind in candidates
@@ -860,6 +973,8 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
 
     if best_kind == "random_forest_with_draw_calibration":
         outcome_payload = serialize_random_forest(outcome_model)
+    elif best_kind in ("xgboost_with_draw_calibration", "lightgbm_with_draw_calibration"):
+        outcome_payload = {"type": "gradient_boosting", "model_type": best_kind}
     else:
         outcome_payload = serialize_multinomial(outcome_model)
 
