@@ -29,9 +29,11 @@ HOME_ADV_GOALS = 0.28
 MAX_GOALS = 8
 DEFAULT_FIFA_POINTS = 1500.0
 FIFA_BLEND_WEIGHT = 0.3
+ELO_RESULT_FIFA_WEIGHT = 0.35
 ELO_BLEND_WEIGHT = 0.55
 ML_BLEND_WEIGHT = 0.45
 SCORER_HALF_LIFE_DAYS = 365
+ML_RECENCY_HALF_LIFE_DAYS = 900
 
 FIFA_TEAM_ALIASES = {
     "USA": "United States",
@@ -60,6 +62,9 @@ FEATURE_NAMES = [
     "homeForm",
     "awayForm",
     "formDiff",
+    "homeRecentOpponentFifa",
+    "awayRecentOpponentFifa",
+    "recentOpponentFifaDiff",
     "h2hHomeRate",
     "homeFifaPoints",
     "awayFifaPoints",
@@ -142,6 +147,12 @@ def tournament_weight(tournament: str) -> float:
     return best
 
 
+def recency_weight(match_date: pd.Timestamp, reference_date: pd.Timestamp) -> float:
+    days_ago = max(0, (reference_date - match_date).days)
+    decay = math.log(2) / ML_RECENCY_HALF_LIFE_DAYS
+    return math.exp(-days_ago * decay)
+
+
 def k_factor(tournament: str) -> float:
     return BASE_K * tournament_weight(tournament)
 
@@ -170,6 +181,12 @@ def recent_form(results: list[tuple[int, int]], n: int = 5) -> float:
         else:
             pts.append(0.0)
     return sum(pts) / len(pts)
+
+
+def recent_average(values: list[float], default: float = DEFAULT_FIFA_POINTS, n: int = 5) -> float:
+    if not values:
+        return default
+    return float(np.mean(values[-n:]))
 
 
 class TeamRatings:
@@ -345,6 +362,7 @@ def build_match_features(
     hr: TeamRatings,
     ar: TeamRatings,
     form: dict[str, list[tuple[int, int]]],
+    opponent_fifa_history: dict[str, list[float]],
     h2h_pair: dict[str, dict[str, list[float]]],
     last_match: dict[str, pd.Timestamp],
     match_date: pd.Timestamp,
@@ -374,6 +392,8 @@ def build_match_features(
     fifa_diff = home_fifa - away_fifa
     home_form = recent_form(form[home])
     away_form = recent_form(form[away])
+    home_recent_opp_fifa = recent_average(opponent_fifa_history[home])
+    away_recent_opp_fifa = recent_average(opponent_fifa_history[away])
     rating_agreement = 1.0 if elo_diff == 0 or fifa_diff == 0 or elo_diff * fifa_diff > 0 else 0.0
 
     return {
@@ -386,6 +406,9 @@ def build_match_features(
         "homeForm": home_form,
         "awayForm": away_form,
         "formDiff": home_form - away_form,
+        "homeRecentOpponentFifa": home_recent_opp_fifa,
+        "awayRecentOpponentFifa": away_recent_opp_fifa,
+        "recentOpponentFifaDiff": home_recent_opp_fifa - away_recent_opp_fifa,
         "h2hHomeRate": h2h_rate_for_team(pair_stats, home),
         "homeFifaPoints": home_fifa,
         "awayFifaPoints": away_fifa,
@@ -405,11 +428,13 @@ def build_match_features(
 def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
     teams: dict[str, TeamRatings] = defaultdict(TeamRatings)
     form: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    opponent_fifa_history: dict[str, list[float]] = defaultdict(list)
     h2h_pair: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     last_match: dict[str, pd.Timestamp] = {}
     history: list[dict] = []
     ml_rows: list[dict] = []
     dc_samples: list[tuple[float, float, int, int]] = []
+    reference_date = matches["date"].max()
 
     for _, row in matches.iterrows():
         home = row["home_team"]
@@ -419,12 +444,24 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         tournament = str(row.get("tournament", "Friendly"))
         match_date = row["date"]
         k = k_factor(tournament)
-        sample_weight = tournament_weight(tournament)
+        sample_weight = tournament_weight(tournament) * recency_weight(
+            match_date, reference_date
+        )
 
         hr, ar = teams[home], teams[away]
 
         features = build_match_features(
-            home, away, neutral, hr, ar, form, h2h_pair, last_match, match_date, fifa
+            home,
+            away,
+            neutral,
+            hr,
+            ar,
+            form,
+            opponent_fifa_history,
+            h2h_pair,
+            last_match,
+            match_date,
+            fifa,
         )
 
         outcome = 0 if hs > aws else (2 if hs < aws else 1)
@@ -456,9 +493,15 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
 
         dc_samples.append((exp_home_goals, exp_away_goals, hs, aws))
 
-        exp_home_result = expected_score(hr.overall, ar.overall)
+        home_result_rating = blend_with_fifa(
+            hr.overall, fifa.get(home, DEFAULT_FIFA_POINTS), ELO_RESULT_FIFA_WEIGHT
+        )
+        away_result_rating = blend_with_fifa(
+            ar.overall, fifa.get(away, DEFAULT_FIFA_POINTS), ELO_RESULT_FIFA_WEIGHT
+        )
+        exp_home_result = expected_score(home_result_rating, away_result_rating)
         if not neutral:
-            exp_home_result = expected_score(hr.overall + 65, ar.overall)
+            exp_home_result = expected_score(home_result_rating + 65, away_result_rating)
 
         actual_home, actual_away = outcome_points(hs, aws)
 
@@ -483,6 +526,8 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
 
         form[home].append((hs, aws))
         form[away].append((aws, hs))
+        opponent_fifa_history[home].append(fifa.get(away, DEFAULT_FIFA_POINTS))
+        opponent_fifa_history[away].append(fifa.get(home, DEFAULT_FIFA_POINTS))
 
         pk = pair_key(home, away)
         home_result = 1.0 if hs > aws else (0.5 if hs == aws else 0.0)
@@ -515,8 +560,10 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
             "awayPenalty": round(r.away_penalty, 3),
         }
 
-    reference_date = matches["date"].max()
     live_form = {team: round(recent_form(form[team]), 4) for team in teams}
+    live_recent_opponent_fifa = {
+        team: round(recent_average(opponent_fifa_history[team]), 1) for team in teams
+    }
     live_last_match = {
         team: last_match[team].strftime("%Y-%m-%d") for team in last_match
     }
@@ -532,6 +579,7 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
     live_state = {
         "referenceDate": reference_date.strftime("%Y-%m-%d"),
         "form": live_form,
+        "recentOpponentFifa": live_recent_opponent_fifa,
         "lastMatchDate": live_last_match,
         "h2h": live_h2h,
         "fifaPoints": {
@@ -966,7 +1014,7 @@ def tune_blend_weights(
     ml_probs = ml_probs_from_meta(ml_meta, holdout)
 
     poisson_by_fifa: dict[float, np.ndarray] = {}
-    for fifa_blend in (0.2, 0.25, 0.3, 0.35, 0.4):
+    for fifa_blend in (0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65):
         probs = np.zeros((len(holdout), 3))
         for i, row in enumerate(holdout):
             exp_home, exp_away = lambdas_from_row(row, fifa_blend)
@@ -975,7 +1023,7 @@ def tune_blend_weights(
         poisson_by_fifa[fifa_blend] = probs
 
     for fifa_blend, poisson_probs in poisson_by_fifa.items():
-        for elo_w in (0.45, 0.5, 0.55, 0.6, 0.65):
+        for elo_w in (0.0, 0.1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7):
             ml_w = 1.0 - elo_w
             ensemble = elo_w * poisson_probs + ml_w * ml_probs
             ensemble /= ensemble.sum(axis=1, keepdims=True)
@@ -1078,6 +1126,7 @@ def main():
         "teamCount": len(elos),
         "homeAdvantageGoals": HOME_ADV_GOALS,
         "fifaBlendWeight": fifa_blend,
+        "featureFifaBlendWeight": FIFA_BLEND_WEIGHT,
         "eloBlendWeight": elo_blend,
         "mlBlendWeight": ml_blend,
         "maxGoals": MAX_GOALS,

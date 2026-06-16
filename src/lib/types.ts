@@ -84,6 +84,7 @@ export interface ModelConfig {
   teamCount: number;
   homeAdvantageGoals: number;
   fifaBlendWeight?: number;
+  featureFifaBlendWeight?: number;
   eloBlendWeight: number;
   mlBlendWeight: number;
   maxGoals: number;
@@ -96,6 +97,7 @@ export interface ModelConfig {
 export interface LiveState {
   referenceDate: string;
   form: Record<string, number>;
+  recentOpponentFifa?: Record<string, number>;
   lastMatchDate: Record<string, string>;
   h2h: Record<string, Record<string, number | string>>;
   fifaPoints: Record<string, number>;

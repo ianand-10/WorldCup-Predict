@@ -74,6 +74,10 @@ function fifaPoints(team: string): number {
   return liveState.fifaPoints[team] ?? DEFAULT_FIFA_POINTS;
 }
 
+function recentOpponentFifa(team: string): number {
+  return liveState.recentOpponentFifa?.[team] ?? DEFAULT_FIFA_POINTS;
+}
+
 function softmax(logits: number[]): number[] {
   const max = Math.max(...logits);
   const exps = logits.map((l) => Math.exp(l - max));
@@ -101,7 +105,7 @@ function buildFeatureVector(
   );
   const homeFifa = fifaPoints(homeTeam);
   const awayFifa = fifaPoints(awayTeam);
-  const fifaBlendWeight = config.fifaBlendWeight ?? 0.3;
+  const fifaBlendWeight = config.featureFifaBlendWeight ?? config.fifaBlendWeight ?? 0.3;
   const blendedHomeOverall = blendWithFifa(
     ratingsHome.overall,
     homeFifa,
@@ -146,6 +150,8 @@ function buildFeatureVector(
   const fifaDiff = homeFifa - awayFifa;
   const homeForm = liveState.form[homeTeam] ?? 0.5;
   const awayForm = liveState.form[awayTeam] ?? 0.5;
+  const homeRecentOpponentFifa = recentOpponentFifa(homeTeam);
+  const awayRecentOpponentFifa = recentOpponentFifa(awayTeam);
   const ratingAgreement =
     eloDiff === 0 || fifaDiff === 0 || eloDiff * fifaDiff > 0 ? 1 : 0;
 
@@ -159,6 +165,9 @@ function buildFeatureVector(
     homeForm,
     awayForm,
     homeForm - awayForm,
+    homeRecentOpponentFifa,
+    awayRecentOpponentFifa,
+    homeRecentOpponentFifa - awayRecentOpponentFifa,
     h2hRateForTeam(homeTeam, awayTeam, homeTeam),
     homeFifa,
     awayFifa,
