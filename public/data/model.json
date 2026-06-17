@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-12T03:42:21.293723Z",
+  "generatedAt": "2026-06-17T08:16:56.434537Z",
   "matchCount": 5678,
   "teamCount": 261,
   "homeAdvantageGoals": 0.28,
@@ -10,6 +10,150 @@
   "maxGoals": 8,
   "dixonColesRho": -0.01,
   "scorerHalfLifeDays": 365,
+  "selectedExperiment": {
+    "name": "current_rankings_control",
+    "baseK": 20.0,
+    "homeAdvantageGoals": 0.28,
+    "featureFifaBlendWeight": 0.3,
+    "eloResultFifaWeight": 0.35,
+    "recencyHalfLifeDays": 900,
+    "useHistoricalFifa": false
+  },
+  "experimentResults": [
+    {
+      "name": "current",
+      "baseK": 20.0,
+      "homeAdvantageGoals": 0.28,
+      "featureFifaBlendWeight": 0.3,
+      "eloResultFifaWeight": 0.35,
+      "recencyHalfLifeDays": 900,
+      "useHistoricalFifa": true,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.3,
+      "eloBlendWeight": 0.4,
+      "mlBlendWeight": 0.6,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5927,
+        "mlAccuracyHoldout": 0.6197,
+        "combinedAccuracy": 0.6209,
+        "holdoutSize": 852
+      }
+    },
+    {
+      "name": "stronger_fifa",
+      "baseK": 20.0,
+      "homeAdvantageGoals": 0.28,
+      "featureFifaBlendWeight": 0.4,
+      "eloResultFifaWeight": 0.45,
+      "recencyHalfLifeDays": 900,
+      "useHistoricalFifa": true,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.35,
+      "eloBlendWeight": 0.4,
+      "mlBlendWeight": 0.6,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5939,
+        "mlAccuracyHoldout": 0.6185,
+        "combinedAccuracy": 0.6244,
+        "holdoutSize": 852
+      }
+    },
+    {
+      "name": "recent_stronger_fifa",
+      "baseK": 18.0,
+      "homeAdvantageGoals": 0.26,
+      "featureFifaBlendWeight": 0.45,
+      "eloResultFifaWeight": 0.5,
+      "recencyHalfLifeDays": 650,
+      "useHistoricalFifa": true,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.2,
+      "eloBlendWeight": 0.0,
+      "mlBlendWeight": 1.0,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5728,
+        "mlAccuracyHoldout": 0.6256,
+        "combinedAccuracy": 0.6256,
+        "holdoutSize": 852
+      }
+    },
+    {
+      "name": "fast_recent",
+      "baseK": 24.0,
+      "homeAdvantageGoals": 0.3,
+      "featureFifaBlendWeight": 0.4,
+      "eloResultFifaWeight": 0.5,
+      "recencyHalfLifeDays": 600,
+      "useHistoricalFifa": true,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.2,
+      "eloBlendWeight": 0.2,
+      "mlBlendWeight": 0.8,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5739,
+        "mlAccuracyHoldout": 0.6244,
+        "combinedAccuracy": 0.6291,
+        "holdoutSize": 852
+      }
+    },
+    {
+      "name": "low_k_fifa",
+      "baseK": 16.0,
+      "homeAdvantageGoals": 0.24,
+      "featureFifaBlendWeight": 0.5,
+      "eloResultFifaWeight": 0.55,
+      "recencyHalfLifeDays": 750,
+      "useHistoricalFifa": true,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.2,
+      "eloBlendWeight": 0.2,
+      "mlBlendWeight": 0.8,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5751,
+        "mlAccuracyHoldout": 0.6232,
+        "combinedAccuracy": 0.6279,
+        "holdoutSize": 852
+      }
+    },
+    {
+      "name": "current_rankings_control",
+      "baseK": 20.0,
+      "homeAdvantageGoals": 0.28,
+      "featureFifaBlendWeight": 0.3,
+      "eloResultFifaWeight": 0.35,
+      "recencyHalfLifeDays": 900,
+      "useHistoricalFifa": false,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.2,
+      "eloBlendWeight": 0.0,
+      "mlBlendWeight": 1.0,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5739,
+        "mlAccuracyHoldout": 0.6444,
+        "combinedAccuracy": 0.6444,
+        "holdoutSize": 852
+      }
+    },
+    {
+      "name": "current_rankings_fast_recent",
+      "baseK": 24.0,
+      "homeAdvantageGoals": 0.3,
+      "featureFifaBlendWeight": 0.4,
+      "eloResultFifaWeight": 0.5,
+      "recencyHalfLifeDays": 600,
+      "useHistoricalFifa": false,
+      "selectedModel": "multinomial_with_draw_calibration",
+      "fifaBlendWeight": 0.2,
+      "eloBlendWeight": 0.0,
+      "mlBlendWeight": 1.0,
+      "systemMetrics": {
+        "poissonAccuracy": 0.5681,
+        "mlAccuracyHoldout": 0.6397,
+        "combinedAccuracy": 0.6397,
+        "holdoutSize": 852
+      }
+    }
+  ],
   "systemMetrics": {
     "poissonAccuracy": 0.5739,
     "mlAccuracyHoldout": 0.6444,
@@ -69,6 +213,35 @@
         "cvLogLoss": 0.9322,
         "holdoutAccuracy": 0.5962,
         "holdoutLogLoss": 0.8466,
+        "drawBlendWeight": 0.0
+      },
+      "extra_trees_with_draw_calibration": {
+        "cvAccuracy": 0.54,
+        "cvLogLoss": 0.9429,
+        "holdoutAccuracy": 0.5951,
+        "holdoutLogLoss": 0.8676,
+        "drawBlendWeight": 0.0
+      }
+    },
+    "holdoutCandidateResults": {
+      "multinomial_with_draw_calibration": {
+        "holdoutAccuracy": 0.6362,
+        "holdoutLogLoss": 0.8283,
+        "drawBlendWeight": 0.0
+      },
+      "random_forest_with_draw_calibration": {
+        "holdoutAccuracy": 0.5962,
+        "holdoutLogLoss": 0.8466,
+        "drawBlendWeight": 0.0
+      },
+      "extra_trees_with_draw_calibration": {
+        "holdoutAccuracy": 0.5951,
+        "holdoutLogLoss": 0.8676,
+        "drawBlendWeight": 0.0
+      },
+      "stacking_logistic": {
+        "holdoutAccuracy": 0.6232,
+        "holdoutLogLoss": 0.8317,
         "drawBlendWeight": 0.0
       }
     },

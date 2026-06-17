@@ -16,6 +16,19 @@ export interface RandomForestModel {
   trees: SerializedTree[];
 }
 
+export interface LinearOutcomeModel {
+  coefficients: number[][];
+  intercepts: number[];
+}
+
+export interface StackingOutcomeModel {
+  baseModels: Array<{
+    type: string;
+    model: LinearOutcomeModel | RandomForestModel;
+  }>;
+  metaModel: LinearOutcomeModel;
+}
+
 export interface TeamRatings {
   overall: number;
   offense: number;
@@ -62,12 +75,7 @@ export interface MLModel {
   >;
   scalerMean: number[];
   scalerScale: number[];
-  outcomeModel:
-    | {
-        coefficients: number[][];
-        intercepts: number[];
-      }
-    | RandomForestModel;
+  outcomeModel: LinearOutcomeModel | RandomForestModel | StackingOutcomeModel;
   drawModel: BinaryLogisticModel;
 }
 

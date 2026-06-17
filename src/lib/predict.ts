@@ -5,11 +5,13 @@ import liveStateData from "../../public/data/liveState.json";
 
 import type {
   BinaryLogisticModel,
+  LinearOutcomeModel,
   GoalscorerPrediction,
   LiveState,
   ModelConfig,
   PredictionResult,
   RandomForestModel,
+  StackingOutcomeModel,
   ScorersData,
   TeamRatings,
   TeamsData,
@@ -212,6 +214,28 @@ function isForestModel(
   return "trees" in model;
 }
 
+function isStackingModel(
+  model: NonNullable<ModelConfig["ml"]>["outcomeModel"]
+): model is StackingOutcomeModel {
+  return "baseModels" in model;
+}
+
+function linearPredictProbability(
+  model: LinearOutcomeModel,
+  features: number[]
+): number[] {
+  return softmax(
+    model.intercepts.map(
+      (intercept, c) =>
+        intercept +
+        model.coefficients[c].reduce(
+          (sum, coef, i) => sum + coef * features[i],
+          0
+        )
+    )
+  );
+}
+
 function forestPredictProbability(
   model: RandomForestModel,
   features: number[]
@@ -243,28 +267,26 @@ function forestPredictProbability(
   return total > 0 ? averaged.map((value) => value / total) : [1 / 3, 1 / 3, 1 / 3];
 }
 
+function outcomeModelProbability(
+  model: LinearOutcomeModel | RandomForestModel | StackingOutcomeModel,
+  features: number[]
+): number[] {
+  if (isForestModel(model)) return forestPredictProbability(model, features);
+  if (!isStackingModel(model)) return linearPredictProbability(model, features);
+
+  const metaFeatures = model.baseModels.flatMap((base) =>
+    outcomeModelProbability(base.model, features)
+  );
+  return linearPredictProbability(model.metaModel, metaFeatures);
+}
+
 function mlPredictFromHomePerspective(
   scaled: number[]
 ): { winHome: number; draw: number; winAway: number } | null {
   const ml = config.ml;
   if (!ml?.outcomeModel || !ml?.drawModel) return null;
 
-  let base: number[];
-  if (isForestModel(ml.outcomeModel)) {
-    base = forestPredictProbability(ml.outcomeModel, scaled);
-  } else {
-    const linearModel = ml.outcomeModel;
-    base = softmax(
-      linearModel.intercepts.map(
-        (intercept, c) =>
-          intercept +
-          linearModel.coefficients[c].reduce(
-            (sum, coef, i) => sum + coef * scaled[i],
-            0
-          )
-      )
-    );
-  }
+  const base = outcomeModelProbability(ml.outcomeModel, scaled);
 
   const drawBlend = ml.drawBlendWeight ?? 0.35;
   const pDrawSpecialist = binaryLogisticProbability(ml.drawModel, scaled);

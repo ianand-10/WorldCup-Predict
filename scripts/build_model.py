@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 from sklearn.model_selection import TimeSeriesSplit
@@ -34,6 +34,72 @@ ELO_BLEND_WEIGHT = 0.55
 ML_BLEND_WEIGHT = 0.45
 SCORER_HALF_LIFE_DAYS = 365
 ML_RECENCY_HALF_LIFE_DAYS = 900
+
+PARAMETER_GRID = [
+    {
+        "name": "current",
+        "baseK": 20.0,
+        "homeAdvantageGoals": 0.28,
+        "featureFifaBlendWeight": 0.30,
+        "eloResultFifaWeight": 0.35,
+        "recencyHalfLifeDays": 900,
+        "useHistoricalFifa": True,
+    },
+    {
+        "name": "stronger_fifa",
+        "baseK": 20.0,
+        "homeAdvantageGoals": 0.28,
+        "featureFifaBlendWeight": 0.40,
+        "eloResultFifaWeight": 0.45,
+        "recencyHalfLifeDays": 900,
+        "useHistoricalFifa": True,
+    },
+    {
+        "name": "recent_stronger_fifa",
+        "baseK": 18.0,
+        "homeAdvantageGoals": 0.26,
+        "featureFifaBlendWeight": 0.45,
+        "eloResultFifaWeight": 0.50,
+        "recencyHalfLifeDays": 650,
+        "useHistoricalFifa": True,
+    },
+    {
+        "name": "fast_recent",
+        "baseK": 24.0,
+        "homeAdvantageGoals": 0.30,
+        "featureFifaBlendWeight": 0.40,
+        "eloResultFifaWeight": 0.50,
+        "recencyHalfLifeDays": 600,
+        "useHistoricalFifa": True,
+    },
+    {
+        "name": "low_k_fifa",
+        "baseK": 16.0,
+        "homeAdvantageGoals": 0.24,
+        "featureFifaBlendWeight": 0.50,
+        "eloResultFifaWeight": 0.55,
+        "recencyHalfLifeDays": 750,
+        "useHistoricalFifa": True,
+    },
+    {
+        "name": "current_rankings_control",
+        "baseK": 20.0,
+        "homeAdvantageGoals": 0.28,
+        "featureFifaBlendWeight": 0.30,
+        "eloResultFifaWeight": 0.35,
+        "recencyHalfLifeDays": 900,
+        "useHistoricalFifa": False,
+    },
+    {
+        "name": "current_rankings_fast_recent",
+        "baseK": 24.0,
+        "homeAdvantageGoals": 0.30,
+        "featureFifaBlendWeight": 0.40,
+        "eloResultFifaWeight": 0.50,
+        "recencyHalfLifeDays": 600,
+        "useHistoricalFifa": False,
+    },
+]
 
 FIFA_TEAM_ALIASES = {
     "USA": "United States",
@@ -145,6 +211,17 @@ def tournament_weight(tournament: str) -> float:
         if key.lower() in t:
             best = max(best, weight)
     return best
+
+
+def apply_model_params(params: dict) -> None:
+    global BASE_K, HOME_ADV_GOALS, FIFA_BLEND_WEIGHT
+    global ELO_RESULT_FIFA_WEIGHT, ML_RECENCY_HALF_LIFE_DAYS
+
+    BASE_K = float(params["baseK"])
+    HOME_ADV_GOALS = float(params["homeAdvantageGoals"])
+    FIFA_BLEND_WEIGHT = float(params["featureFifaBlendWeight"])
+    ELO_RESULT_FIFA_WEIGHT = float(params["eloResultFifaWeight"])
+    ML_RECENCY_HALF_LIFE_DAYS = float(params["recencyHalfLifeDays"])
 
 
 def recency_weight(match_date: pd.Timestamp, reference_date: pd.Timestamp) -> float:
@@ -296,6 +373,70 @@ def load_fifa_rankings() -> dict[str, float]:
     return result
 
 
+def load_historical_fifa_rankings() -> dict[tuple[int, int], dict[str, float]]:
+    candidates = [
+        DATA_DIR / "historical_fifa_rankings.csv",
+        ROOT / "historical mens ranking - fifa_mens_rank.csv",
+    ]
+    path = next((p for p in candidates if p.exists()), None)
+    if path is None:
+        print("  No historical FIFA rankings file found; using current rankings only")
+        return {}
+
+    df = pd.read_csv(path)
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    required = {"date", "semester", "team"}
+    if not required.issubset(df.columns):
+        print(f"  {path.name} is missing historical ranking columns; skipping")
+        return {}
+
+    points_col = "total.points" if "total.points" in df.columns else "points"
+    if points_col not in df.columns:
+        print(f"  {path.name} has no points column; skipping")
+        return {}
+
+    snapshots: dict[tuple[int, int], dict[str, float]] = defaultdict(dict)
+    for _, row in df.iterrows():
+        try:
+            year = int(row["date"])
+            semester = int(row["semester"])
+            points = float(row[points_col])
+        except (TypeError, ValueError):
+            continue
+
+        team = normalize_fifa_team_name(str(row["team"]).strip())
+        if team:
+            snapshots[(year, semester)][team] = points
+
+    usable = {key: value for key, value in snapshots.items() if len(value) > 20}
+    print(f"  {len(usable)} historical FIFA snapshots loaded from {path.name}")
+    return usable
+
+
+def semester_for_date(match_date: pd.Timestamp) -> tuple[int, int]:
+    semester = 1 if int(match_date.month) <= 6 else 2
+    return int(match_date.year), semester
+
+
+def fifa_points_for_date(
+    team: str,
+    match_date: pd.Timestamp,
+    current_fifa: dict[str, float],
+    historical_fifa: dict[tuple[int, int], dict[str, float]],
+) -> float:
+    year, semester = semester_for_date(match_date)
+    if year >= 2026:
+        return current_fifa.get(team, DEFAULT_FIFA_POINTS)
+
+    available = sorted(k for k in historical_fifa if k <= (year, semester))
+    for key in reversed(available):
+        points = historical_fifa[key].get(team)
+        if points is not None:
+            return points
+
+    return current_fifa.get(team, DEFAULT_FIFA_POINTS)
+
+
 def blend_with_fifa(elo_rating: float, fifa_points: float, weight: float) -> float:
     return (1.0 - weight) * elo_rating + weight * fifa_points
 
@@ -330,15 +471,11 @@ def poisson_outcome_probs(
 def match_lambdas_with_fifa(
     hr: TeamRatings,
     ar: TeamRatings,
-    home: str,
-    away: str,
     neutral: bool,
-    fifa: dict[str, float],
+    home_fifa: float,
+    away_fifa: float,
     fifa_blend: float,
 ) -> tuple[float, float]:
-    home_fifa = fifa.get(home, DEFAULT_FIFA_POINTS)
-    away_fifa = fifa.get(away, DEFAULT_FIFA_POINTS)
-
     home_off = blend_with_fifa(hr.offense, home_fifa, fifa_blend)
     home_def = blend_with_fifa(hr.defense, home_fifa, fifa_blend)
     away_off = blend_with_fifa(ar.offense, away_fifa, fifa_blend)
@@ -366,7 +503,8 @@ def build_match_features(
     h2h_pair: dict[str, dict[str, list[float]]],
     last_match: dict[str, pd.Timestamp],
     match_date: pd.Timestamp,
-    fifa: dict[str, float],
+    home_fifa: float,
+    away_fifa: float,
 ) -> dict[str, float]:
     pk = pair_key(home, away)
     pair_stats = h2h_pair.get(pk, {})
@@ -375,8 +513,6 @@ def build_match_features(
     exp_home = goal_expectation(hr.offense, ar.defense, venue_boost + hr.home_bonus)
     exp_away = goal_expectation(ar.offense, hr.defense, ar.away_penalty)
 
-    home_fifa = fifa.get(home, DEFAULT_FIFA_POINTS)
-    away_fifa = fifa.get(away, DEFAULT_FIFA_POINTS)
     blended_home_overall = blend_with_fifa(hr.overall, home_fifa, FIFA_BLEND_WEIGHT)
     blended_away_overall = blend_with_fifa(ar.overall, away_fifa, FIFA_BLEND_WEIGHT)
     blended_home_off = blend_with_fifa(hr.offense, home_fifa, FIFA_BLEND_WEIGHT)
@@ -425,7 +561,11 @@ def build_match_features(
     }
 
 
-def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
+def compute_elos_and_features(
+    matches: pd.DataFrame,
+    current_fifa: dict[str, float],
+    historical_fifa: dict[tuple[int, int], dict[str, float]],
+):
     teams: dict[str, TeamRatings] = defaultdict(TeamRatings)
     form: dict[str, list[tuple[int, int]]] = defaultdict(list)
     opponent_fifa_history: dict[str, list[float]] = defaultdict(list)
@@ -447,6 +587,8 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         sample_weight = tournament_weight(tournament) * recency_weight(
             match_date, reference_date
         )
+        home_fifa = fifa_points_for_date(home, match_date, current_fifa, historical_fifa)
+        away_fifa = fifa_points_for_date(away, match_date, current_fifa, historical_fifa)
 
         hr, ar = teams[home], teams[away]
 
@@ -461,13 +603,14 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
             h2h_pair,
             last_match,
             match_date,
-            fifa,
+            home_fifa,
+            away_fifa,
         )
 
         outcome = 0 if hs > aws else (2 if hs < aws else 1)
 
         exp_home_goals, exp_away_goals = match_lambdas_with_fifa(
-            hr, ar, home, away, neutral, fifa, FIFA_BLEND_WEIGHT
+            hr, ar, neutral, home_fifa, away_fifa, FIFA_BLEND_WEIGHT
         )
 
         ml_rows.append(
@@ -486,18 +629,18 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
                 "awayDefense": ar.defense,
                 "homeBonus": hr.home_bonus,
                 "awayPenalty": ar.away_penalty,
-                "homeFifa": fifa.get(home, DEFAULT_FIFA_POINTS),
-                "awayFifa": fifa.get(away, DEFAULT_FIFA_POINTS),
+                "homeFifa": home_fifa,
+                "awayFifa": away_fifa,
             }
         )
 
         dc_samples.append((exp_home_goals, exp_away_goals, hs, aws))
 
         home_result_rating = blend_with_fifa(
-            hr.overall, fifa.get(home, DEFAULT_FIFA_POINTS), ELO_RESULT_FIFA_WEIGHT
+            hr.overall, home_fifa, ELO_RESULT_FIFA_WEIGHT
         )
         away_result_rating = blend_with_fifa(
-            ar.overall, fifa.get(away, DEFAULT_FIFA_POINTS), ELO_RESULT_FIFA_WEIGHT
+            ar.overall, away_fifa, ELO_RESULT_FIFA_WEIGHT
         )
         exp_home_result = expected_score(home_result_rating, away_result_rating)
         if not neutral:
@@ -526,8 +669,8 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
 
         form[home].append((hs, aws))
         form[away].append((aws, hs))
-        opponent_fifa_history[home].append(fifa.get(away, DEFAULT_FIFA_POINTS))
-        opponent_fifa_history[away].append(fifa.get(home, DEFAULT_FIFA_POINTS))
+        opponent_fifa_history[home].append(away_fifa)
+        opponent_fifa_history[away].append(home_fifa)
 
         pk = pair_key(home, away)
         home_result = 1.0 if hs > aws else (0.5 if hs == aws else 0.0)
@@ -583,10 +726,10 @@ def compute_elos_and_features(matches: pd.DataFrame, fifa: dict[str, float]):
         "lastMatchDate": live_last_match,
         "h2h": live_h2h,
         "fifaPoints": {
-            team: round(fifa.get(team, DEFAULT_FIFA_POINTS), 1) for team in teams
+            team: round(current_fifa.get(team, DEFAULT_FIFA_POINTS), 1) for team in teams
         },
     }
-    for team, points in fifa.items():
+    for team, points in current_fifa.items():
         live_state["fifaPoints"][team] = round(points, 1)
 
     return elos, history, ml_rows, dc_samples, live_state
@@ -652,7 +795,33 @@ def fit_random_forest_with_draw_calibration(
         max_features="sqrt",
         class_weight="balanced_subsample",
         random_state=42,
-        n_jobs=-1,
+        n_jobs=1,
+    )
+    draw_model = LogisticRegression(
+        max_iter=1500,
+        class_weight="balanced",
+        C=0.7,
+        random_state=42,
+    )
+    outcome_model.fit(X_scaled, y_outcome, sample_weight=weights)
+    draw_model.fit(X_scaled, y_draw, sample_weight=weights)
+    return outcome_model, draw_model
+
+
+def fit_extra_trees_with_draw_calibration(
+    X_scaled: np.ndarray,
+    y_outcome: np.ndarray,
+    y_draw: np.ndarray,
+    weights: np.ndarray,
+) -> tuple[ExtraTreesClassifier, LogisticRegression]:
+    outcome_model = ExtraTreesClassifier(
+        n_estimators=180,
+        max_depth=8,
+        min_samples_leaf=14,
+        max_features="sqrt",
+        class_weight="balanced",
+        random_state=42,
+        n_jobs=1,
     )
     draw_model = LogisticRegression(
         max_iter=1500,
@@ -711,7 +880,7 @@ def serialize_tree(tree) -> dict:
     }
 
 
-def serialize_random_forest(model: RandomForestClassifier) -> dict:
+def serialize_tree_ensemble(model) -> dict:
     return {
         "classes": [int(c) for c in model.classes_.tolist()],
         "trees": [serialize_tree(tree) for tree in model.estimators_],
@@ -753,8 +922,30 @@ def ml_probs_from_meta(ml_meta: dict, rows: list[dict]) -> np.ndarray:
     scale = np.array(ml_meta["scalerScale"])
     X_scaled = (X - mean) / np.where(scale == 0, 1, scale)
 
-    if ml_meta.get("type") == "random_forest_with_draw_calibration":
+    if ml_meta.get("type") in (
+        "random_forest_with_draw_calibration",
+        "extra_trees_with_draw_calibration",
+    ):
         base = forest_predict_proba(ml_meta, X_scaled)
+    elif ml_meta.get("type") == "stacking_logistic":
+        stack_parts = []
+        for base_model in ml_meta["outcomeModel"]["baseModels"]:
+            base_meta = {
+                "type": base_model["type"],
+                "outcomeModel": base_model["model"],
+                "drawModel": ml_meta["drawModel"],
+                "drawBlendWeight": 0.0,
+                "scalerMean": ml_meta["scalerMean"],
+                "scalerScale": ml_meta["scalerScale"],
+            }
+            stack_parts.append(ml_probs_from_meta(base_meta, rows))
+        meta_X = np.concatenate(stack_parts, axis=1)
+        coef = np.array(ml_meta["outcomeModel"]["metaModel"]["coefficients"])
+        intercepts = np.array(ml_meta["outcomeModel"]["metaModel"]["intercepts"])
+        logits = intercepts + meta_X @ coef.T
+        logits -= logits.max(axis=1, keepdims=True)
+        base = np.exp(logits)
+        base /= base.sum(axis=1, keepdims=True)
     else:
         coef = np.array(ml_meta["outcomeModel"]["coefficients"])
         intercepts = np.array(ml_meta["outcomeModel"]["intercepts"])
@@ -775,10 +966,104 @@ def ml_probs_from_meta(ml_meta: dict, rows: list[dict]) -> np.ndarray:
     return ml_probs
 
 
+def candidate_predict_proba(kind: str, model, X: np.ndarray) -> np.ndarray:
+    if kind in ("multinomial_with_draw_calibration", "random_forest_with_draw_calibration", "extra_trees_with_draw_calibration"):
+        return model.predict_proba(X)
+    raise ValueError(f"Unsupported candidate model: {kind}")
+
+
 def fit_candidate_model(kind: str, X, y_outcome, y_draw, weights):
     if kind == "random_forest_with_draw_calibration":
         return fit_random_forest_with_draw_calibration(X, y_outcome, y_draw, weights)
+    if kind == "extra_trees_with_draw_calibration":
+        return fit_extra_trees_with_draw_calibration(X, y_outcome, y_draw, weights)
     return fit_multinomial_with_draw_calibration(X, y_outcome, y_draw, weights)
+
+
+STACK_BASE_KINDS = [
+    "multinomial_with_draw_calibration",
+    "random_forest_with_draw_calibration",
+    "extra_trees_with_draw_calibration",
+]
+
+
+def train_stacking_model(
+    X: np.ndarray,
+    y_outcome: np.ndarray,
+    weights: np.ndarray,
+) -> dict:
+    tscv = TimeSeriesSplit(n_splits=5)
+    meta_X = np.zeros((len(X), len(STACK_BASE_KINDS) * 3))
+    covered = np.zeros(len(X), dtype=bool)
+
+    for train_idx, valid_idx in tscv.split(X):
+        if len(train_idx) < 800 or len(valid_idx) < 50:
+            continue
+
+        for base_i, kind in enumerate(STACK_BASE_KINDS):
+            outcome_model, _ = fit_candidate_model(
+                kind,
+                X[train_idx],
+                y_outcome[train_idx],
+                np.array(y_outcome[train_idx] == 1, dtype=int),
+                weights[train_idx],
+            )
+            probs = candidate_predict_proba(kind, outcome_model, X[valid_idx])
+            meta_X[valid_idx, base_i * 3 : base_i * 3 + 3] = probs
+
+        covered[valid_idx] = True
+
+    if covered.sum() < 500:
+        raise ValueError("Not enough out-of-fold rows to train stacking model")
+
+    meta_model = LogisticRegression(
+        max_iter=1500,
+        solver="lbfgs",
+        C=0.7,
+        random_state=42,
+    )
+    meta_model.fit(meta_X[covered], y_outcome[covered], sample_weight=weights[covered])
+
+    base_models = []
+    for kind in STACK_BASE_KINDS:
+        outcome_model, _ = fit_candidate_model(
+            kind,
+            X,
+            y_outcome,
+            np.array(y_outcome == 1, dtype=int),
+            weights,
+        )
+        base_models.append((kind, outcome_model))
+
+    return {
+        "baseModels": base_models,
+        "metaModel": meta_model,
+    }
+
+
+def stacking_predict_proba(stack_model: dict, X: np.ndarray) -> np.ndarray:
+    meta_X = np.zeros((X.shape[0], len(stack_model["baseModels"]) * 3))
+    for base_i, (kind, model) in enumerate(stack_model["baseModels"]):
+        probs = candidate_predict_proba(kind, model, X)
+        meta_X[:, base_i * 3 : base_i * 3 + 3] = probs
+
+    return stack_model["metaModel"].predict_proba(meta_X)
+
+
+def serialize_outcome_model(kind: str, model) -> dict:
+    if kind == "multinomial_with_draw_calibration":
+        return serialize_multinomial(model)
+    if kind in ("random_forest_with_draw_calibration", "extra_trees_with_draw_calibration"):
+        return serialize_tree_ensemble(model)
+    if kind == "stacking_logistic":
+        return {
+            "baseModels": [
+                {"type": base_kind, "model": serialize_outcome_model(base_kind, base_model)}
+                for base_kind, base_model in model["baseModels"]
+            ],
+            "metaModel": serialize_multinomial(model["metaModel"]),
+        }
+    raise ValueError(f"Unsupported model type: {kind}")
 
 
 def select_draw_blend(
@@ -822,6 +1107,7 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     candidates = [
         "multinomial_with_draw_calibration",
         "random_forest_with_draw_calibration",
+        "extra_trees_with_draw_calibration",
     ]
     candidate_results: dict[str, dict[str, list[float] | float]] = {
         kind: {"cvAccuracy": [], "cvLogLoss": []} for kind in candidates
@@ -863,20 +1149,34 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     best_draw_blend = 0.35
     holdout_summary: dict[str, dict[str, float]] = {}
 
-    for kind in candidates:
-        holdout_outcome, holdout_draw = fit_candidate_model(
-            kind,
-            X_train_h,
-            y_outcome[:split_idx],
-            y_draw[:split_idx],
-            weights[:split_idx],
-        )
-        draw_blend, holdout_probs, holdout_acc, holdout_loss = select_draw_blend(
-            holdout_outcome,
-            holdout_draw,
-            X_test_h,
-            y_outcome[split_idx:],
-        )
+    holdout_candidates = [*candidates, "stacking_logistic"]
+    for kind in holdout_candidates:
+        if kind == "stacking_logistic":
+            stack_model = train_stacking_model(
+                X_train_h,
+                y_outcome[:split_idx],
+                weights[:split_idx],
+            )
+            holdout_probs = stacking_predict_proba(stack_model, X_test_h)
+            holdout_acc = outcome_accuracy(y_outcome[split_idx:], holdout_probs)
+            holdout_loss = log_loss(
+                y_outcome[split_idx:], holdout_probs, labels=[0, 1, 2]
+            )
+            draw_blend = 0.0
+        else:
+            holdout_outcome, holdout_draw = fit_candidate_model(
+                kind,
+                X_train_h,
+                y_outcome[:split_idx],
+                y_draw[:split_idx],
+                weights[:split_idx],
+            )
+            draw_blend, holdout_probs, holdout_acc, holdout_loss = select_draw_blend(
+                holdout_outcome,
+                holdout_draw,
+                X_test_h,
+                y_outcome[split_idx:],
+            )
         holdout_summary[kind] = {
             "accuracy": float(holdout_acc),
             "logLoss": float(holdout_loss),
@@ -888,11 +1188,21 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
             best_holdout_loss = float(holdout_loss)
             best_draw_blend = float(draw_blend)
 
-    outcome_model, draw_model = fit_candidate_model(
-        best_kind, X_scaled, y_outcome, y_draw, weights
-    )
+    if best_kind == "stacking_logistic":
+        outcome_model = train_stacking_model(X_scaled, y_outcome, weights)
+        draw_model = LogisticRegression(
+            max_iter=1500,
+            class_weight="balanced",
+            C=0.7,
+            random_state=42,
+        )
+        draw_model.fit(X_scaled, y_draw, sample_weight=weights)
+    else:
+        outcome_model, draw_model = fit_candidate_model(
+            best_kind, X_scaled, y_outcome, y_draw, weights
+        )
 
-    selected_scores = candidate_results[best_kind]["cvAccuracy"]
+    selected_scores = candidate_results.get(best_kind, {}).get("cvAccuracy", [])
     cv_mean = float(np.mean(selected_scores)) if selected_scores else best_holdout_acc
     cv_std = float(np.std(selected_scores)) if selected_scores else 0.0
 
@@ -906,10 +1216,7 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     print(f"  ML time-series CV accuracy: {cv_mean:.3f} (+/- {cv_std:.3f})")
     print(f"  ML chronological holdout (last 15%): {best_holdout_acc:.3f}")
 
-    if best_kind == "random_forest_with_draw_calibration":
-        outcome_payload = serialize_random_forest(outcome_model)
-    else:
-        outcome_payload = serialize_multinomial(outcome_model)
+    outcome_payload = serialize_outcome_model(best_kind, outcome_model)
 
     return {
         "type": best_kind,
@@ -934,6 +1241,14 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
                 "drawBlendWeight": round(holdout_summary[kind]["drawBlend"], 4),
             }
             for kind, values in candidate_results.items()
+        },
+        "holdoutCandidateResults": {
+            kind: {
+                "holdoutAccuracy": round(metrics["accuracy"], 4),
+                "holdoutLogLoss": round(metrics["logLoss"], 4),
+                "drawBlendWeight": round(metrics["drawBlend"], 4),
+            }
+            for kind, metrics in holdout_summary.items()
         },
         "scalerMean": scaler.mean_.tolist(),
         "scalerScale": scaler.scale_.tolist(),
@@ -1087,31 +1402,83 @@ def main():
     print(f"  {len(matches)} matches loaded")
 
     print("Loading FIFA rankings...")
-    fifa = load_fifa_rankings()
+    current_fifa = load_fifa_rankings()
+    historical_fifa = load_historical_fifa_rankings()
+    best_run = None
+    experiment_results = []
 
-    print("Computing ELO ratings and features...")
-    elos, history, ml_rows, dc_samples, live_state = compute_elos_and_features(
-        matches, fifa
-    )
-    print(f"  {len(elos)} teams rated")
+    for params in PARAMETER_GRID:
+        apply_model_params(params)
+        print(f"\nExperiment: {params['name']}")
 
-    print("Estimating Dixon-Coles rho...")
-    dixon_coles_rho = estimate_dixon_coles_rho(dc_samples)
-    print(f"  rho = {dixon_coles_rho}")
-
-    print("Training ML models (multinomial logistic + draw calibration + time-series CV)...")
-    ml_meta = train_ml_models(ml_rows)
-
-    fifa_blend, elo_blend, ml_blend = tune_blend_weights(ml_rows, ml_meta, dixon_coles_rho)
-    system_metrics = evaluate_system_accuracy(
-        ml_rows, ml_meta, dixon_coles_rho, fifa_blend, elo_blend, ml_blend
-    )
-    if system_metrics:
-        print(
-            f"  Holdout accuracy — Poisson: {system_metrics['poissonAccuracy']:.3f}, "
-            f"ML: {system_metrics.get('mlAccuracyHoldout', 0):.3f}, "
-            f"Combined: {system_metrics['combinedAccuracy']:.3f}"
+        print("  Computing ELO ratings and features...")
+        fifa_history_for_run = historical_fifa if params.get("useHistoricalFifa", True) else {}
+        elos, history, ml_rows, dc_samples, live_state = compute_elos_and_features(
+            matches, current_fifa, fifa_history_for_run
         )
+        print(f"  {len(elos)} teams rated")
+
+        print("  Estimating Dixon-Coles rho...")
+        dixon_coles_rho = estimate_dixon_coles_rho(dc_samples)
+        print(f"  rho = {dixon_coles_rho}")
+
+        print("  Training ML candidates + stacking...")
+        ml_meta = train_ml_models(ml_rows)
+
+        fifa_blend, elo_blend, ml_blend = tune_blend_weights(
+            ml_rows, ml_meta, dixon_coles_rho
+        )
+        system_metrics = evaluate_system_accuracy(
+            ml_rows, ml_meta, dixon_coles_rho, fifa_blend, elo_blend, ml_blend
+        )
+        score = system_metrics.get("combinedAccuracy", 0.0) if system_metrics else 0.0
+        experiment_results.append(
+            {
+                **params,
+                "selectedModel": ml_meta.get("type") if ml_meta else None,
+                "fifaBlendWeight": fifa_blend,
+                "eloBlendWeight": elo_blend,
+                "mlBlendWeight": ml_blend,
+                "systemMetrics": system_metrics,
+            }
+        )
+        if system_metrics:
+            print(
+                f"  Holdout accuracy - Poisson: {system_metrics['poissonAccuracy']:.3f}, "
+                f"ML: {system_metrics.get('mlAccuracyHoldout', 0):.3f}, "
+                f"Combined: {system_metrics['combinedAccuracy']:.3f}"
+            )
+
+        if best_run is None or score > best_run["score"]:
+            best_run = {
+                "score": score,
+                "params": params,
+                "elos": elos,
+                "live_state": live_state,
+                "dixon_coles_rho": dixon_coles_rho,
+                "ml_meta": ml_meta,
+                "fifa_blend": fifa_blend,
+                "elo_blend": elo_blend,
+                "ml_blend": ml_blend,
+                "system_metrics": system_metrics,
+            }
+    if best_run is None:
+        raise RuntimeError("No model experiment completed")
+
+    apply_model_params(best_run["params"])
+    elos = best_run["elos"]
+    live_state = best_run["live_state"]
+    dixon_coles_rho = best_run["dixon_coles_rho"]
+    ml_meta = best_run["ml_meta"]
+    fifa_blend = best_run["fifa_blend"]
+    elo_blend = best_run["elo_blend"]
+    ml_blend = best_run["ml_blend"]
+    system_metrics = best_run["system_metrics"]
+
+    print(
+        f"\nSelected experiment: {best_run['params']['name']} "
+        f"(combined holdout {best_run['score']:.3f})"
+    )
 
     print("Building scorer stats...")
     scorers = load_scorers()
@@ -1132,6 +1499,8 @@ def main():
         "maxGoals": MAX_GOALS,
         "dixonColesRho": dixon_coles_rho,
         "scorerHalfLifeDays": SCORER_HALF_LIFE_DAYS,
+        "selectedExperiment": best_run["params"],
+        "experimentResults": experiment_results,
         "systemMetrics": system_metrics,
         "ml": ml_meta,
     }
