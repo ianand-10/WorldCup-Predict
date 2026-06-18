@@ -482,6 +482,7 @@ export function getModelMeta() {
     mlAccuracy: config.ml?.accuracy ?? null,
     mlAccuracyStd: config.ml?.accuracyStd ?? null,
     combinedAccuracy: sys?.combinedAccuracy ?? null,
+    calibratedAccuracy: sys?.calibratedAccuracy ?? null,
     poissonAccuracy: sys?.poissonAccuracy ?? null,
     mlHoldoutAccuracy: sys?.mlAccuracyHoldout ?? config.ml?.holdoutAccuracy ?? null,
     fifaBlendWeight: config.fifaBlendWeight ?? null,
