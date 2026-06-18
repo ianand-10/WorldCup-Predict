@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+import warnings
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -18,6 +19,21 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.preprocessing import StandardScaler
+
+warnings.filterwarnings(
+    "ignore",
+    message="X does not have valid feature names, but LGBMClassifier was fitted with feature names",
+)
+
+try:
+    from xgboost import XGBClassifier
+except ImportError:
+    XGBClassifier = None
+
+try:
+    from lightgbm import LGBMClassifier
+except ImportError:
+    LGBMClassifier = None
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
@@ -834,6 +850,77 @@ def fit_extra_trees_with_draw_calibration(
     return outcome_model, draw_model
 
 
+def fit_xgboost_with_draw_calibration(
+    X_scaled: np.ndarray,
+    y_outcome: np.ndarray,
+    y_draw: np.ndarray,
+    weights: np.ndarray,
+):
+    if XGBClassifier is None:
+        raise ImportError("xgboost is not installed")
+
+    outcome_model = XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        n_estimators=180,
+        max_depth=3,
+        learning_rate=0.035,
+        subsample=0.85,
+        colsample_bytree=0.85,
+        min_child_weight=8,
+        reg_lambda=2.5,
+        reg_alpha=0.2,
+        eval_metric="mlogloss",
+        random_state=42,
+        n_jobs=1,
+    )
+    draw_model = LogisticRegression(
+        max_iter=1500,
+        class_weight="balanced",
+        C=0.7,
+        random_state=42,
+    )
+    outcome_model.fit(X_scaled, y_outcome, sample_weight=weights)
+    draw_model.fit(X_scaled, y_draw, sample_weight=weights)
+    return outcome_model, draw_model
+
+
+def fit_lightgbm_with_draw_calibration(
+    X_scaled: np.ndarray,
+    y_outcome: np.ndarray,
+    y_draw: np.ndarray,
+    weights: np.ndarray,
+):
+    if LGBMClassifier is None:
+        raise ImportError("lightgbm is not installed")
+
+    outcome_model = LGBMClassifier(
+        objective="multiclass",
+        num_class=3,
+        n_estimators=220,
+        max_depth=4,
+        num_leaves=15,
+        learning_rate=0.03,
+        subsample=0.85,
+        colsample_bytree=0.85,
+        min_child_samples=35,
+        reg_lambda=2.0,
+        reg_alpha=0.2,
+        random_state=42,
+        n_jobs=1,
+        verbosity=-1,
+    )
+    draw_model = LogisticRegression(
+        max_iter=1500,
+        class_weight="balanced",
+        C=0.7,
+        random_state=42,
+    )
+    outcome_model.fit(X_scaled, y_outcome, sample_weight=weights)
+    draw_model.fit(X_scaled, y_draw, sample_weight=weights)
+    return outcome_model, draw_model
+
+
 def blended_predict_proba(
     outcome_model,
     draw_model: LogisticRegression,
@@ -853,6 +940,77 @@ def blended_predict_proba(
 def outcome_accuracy(y_true: np.ndarray, probs: np.ndarray) -> float:
     preds = probs.argmax(axis=1)
     return float((preds == y_true).mean())
+
+
+def apply_decision_calibration(probs: np.ndarray, calibration: dict | None) -> np.ndarray:
+    if not calibration:
+        return probs
+
+    adjusted = probs.copy()
+    draw_multiplier = float(calibration.get("drawMultiplier", 1.0))
+    close_margin = float(calibration.get("closeMargin", 0.0))
+    min_draw_probability = float(calibration.get("minDrawProbability", 0.0))
+    favorite_multiplier = float(calibration.get("favoriteMultiplier", 1.0))
+
+    win_gap = np.abs(adjusted[:, 0] - adjusted[:, 2])
+    favorite_probs = np.maximum(adjusted[:, 0], adjusted[:, 2])
+    close_mask = (win_gap <= close_margin) & (adjusted[:, 1] >= min_draw_probability)
+    favorite_mask = ~close_mask
+
+    adjusted[close_mask, 1] *= draw_multiplier
+    if favorite_multiplier != 1.0:
+        home_favorite = favorite_mask & (adjusted[:, 0] >= adjusted[:, 2])
+        away_favorite = favorite_mask & (adjusted[:, 2] > adjusted[:, 0])
+        confident = favorite_probs >= float(calibration.get("favoriteMinProbability", 0.0))
+        adjusted[home_favorite & confident, 0] *= favorite_multiplier
+        adjusted[away_favorite & confident, 2] *= favorite_multiplier
+
+    adjusted /= adjusted.sum(axis=1, keepdims=True)
+    return adjusted
+
+
+def tune_decision_calibration(y_true: np.ndarray, probs: np.ndarray) -> tuple[dict, np.ndarray]:
+    baseline_acc = outcome_accuracy(y_true, probs)
+    baseline_loss = log_loss(y_true, probs, labels=[0, 1, 2])
+    best = {
+        "drawMultiplier": 1.0,
+        "closeMargin": 0.0,
+        "minDrawProbability": 0.0,
+        "favoriteMultiplier": 1.0,
+        "favoriteMinProbability": 0.0,
+        "accuracy": round(baseline_acc, 4),
+        "logLoss": round(float(baseline_loss), 4),
+    }
+    best_probs = probs
+    best_key = (baseline_acc, -baseline_loss)
+
+    for draw_multiplier in (1.0, 1.08, 1.16, 1.24, 1.32, 1.4, 1.55):
+        for close_margin in (0.02, 0.04, 0.06, 0.08, 0.1, 0.14, 0.18, 0.24):
+            for min_draw_probability in (0.16, 0.18, 0.2, 0.22, 0.24, 0.26):
+                for favorite_multiplier in (1.0, 1.04, 1.08):
+                    calibration = {
+                        "drawMultiplier": draw_multiplier,
+                        "closeMargin": close_margin,
+                        "minDrawProbability": min_draw_probability,
+                        "favoriteMultiplier": favorite_multiplier,
+                        "favoriteMinProbability": 0.42,
+                    }
+                    calibrated = apply_decision_calibration(probs, calibration)
+                    acc = outcome_accuracy(y_true, calibrated)
+                    loss = log_loss(y_true, calibrated, labels=[0, 1, 2])
+                    key = (acc, -loss)
+                    if key > best_key:
+                        best_key = key
+                        best_probs = calibrated
+                        best = {
+                            **calibration,
+                            "accuracy": round(float(acc), 4),
+                            "logLoss": round(float(loss), 4),
+                        }
+
+    best["baselineAccuracy"] = round(float(baseline_acc), 4)
+    best["baselineLogLoss"] = round(float(baseline_loss), 4)
+    return best, best_probs
 
 
 def serialize_binary_logistic(model: LogisticRegression) -> dict:
@@ -967,7 +1125,13 @@ def ml_probs_from_meta(ml_meta: dict, rows: list[dict]) -> np.ndarray:
 
 
 def candidate_predict_proba(kind: str, model, X: np.ndarray) -> np.ndarray:
-    if kind in ("multinomial_with_draw_calibration", "random_forest_with_draw_calibration", "extra_trees_with_draw_calibration"):
+    if kind in (
+        "multinomial_with_draw_calibration",
+        "random_forest_with_draw_calibration",
+        "extra_trees_with_draw_calibration",
+        "xgboost_with_draw_calibration",
+        "lightgbm_with_draw_calibration",
+    ):
         return model.predict_proba(X)
     raise ValueError(f"Unsupported candidate model: {kind}")
 
@@ -977,30 +1141,48 @@ def fit_candidate_model(kind: str, X, y_outcome, y_draw, weights):
         return fit_random_forest_with_draw_calibration(X, y_outcome, y_draw, weights)
     if kind == "extra_trees_with_draw_calibration":
         return fit_extra_trees_with_draw_calibration(X, y_outcome, y_draw, weights)
+    if kind == "xgboost_with_draw_calibration":
+        return fit_xgboost_with_draw_calibration(X, y_outcome, y_draw, weights)
+    if kind == "lightgbm_with_draw_calibration":
+        return fit_lightgbm_with_draw_calibration(X, y_outcome, y_draw, weights)
     return fit_multinomial_with_draw_calibration(X, y_outcome, y_draw, weights)
 
 
-STACK_BASE_KINDS = [
+DEPLOYABLE_KINDS = [
     "multinomial_with_draw_calibration",
     "random_forest_with_draw_calibration",
     "extra_trees_with_draw_calibration",
 ]
+
+BOOSTER_KINDS = [
+    kind
+    for kind, available in (
+        ("xgboost_with_draw_calibration", XGBClassifier is not None),
+        ("lightgbm_with_draw_calibration", LGBMClassifier is not None),
+    )
+    if available
+]
+
+STACK_BASE_KINDS = DEPLOYABLE_KINDS
+BOOSTER_STACK_BASE_KINDS = [*DEPLOYABLE_KINDS, *BOOSTER_KINDS]
 
 
 def train_stacking_model(
     X: np.ndarray,
     y_outcome: np.ndarray,
     weights: np.ndarray,
+    base_kinds: list[str] | None = None,
 ) -> dict:
+    base_kinds = base_kinds or STACK_BASE_KINDS
     tscv = TimeSeriesSplit(n_splits=5)
-    meta_X = np.zeros((len(X), len(STACK_BASE_KINDS) * 3))
+    meta_X = np.zeros((len(X), len(base_kinds) * 3))
     covered = np.zeros(len(X), dtype=bool)
 
     for train_idx, valid_idx in tscv.split(X):
         if len(train_idx) < 800 or len(valid_idx) < 50:
             continue
 
-        for base_i, kind in enumerate(STACK_BASE_KINDS):
+        for base_i, kind in enumerate(base_kinds):
             outcome_model, _ = fit_candidate_model(
                 kind,
                 X[train_idx],
@@ -1025,7 +1207,7 @@ def train_stacking_model(
     meta_model.fit(meta_X[covered], y_outcome[covered], sample_weight=weights[covered])
 
     base_models = []
-    for kind in STACK_BASE_KINDS:
+    for kind in base_kinds:
         outcome_model, _ = fit_candidate_model(
             kind,
             X,
@@ -1104,11 +1286,7 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     X_scaled = scaler.fit_transform(X)
 
     tscv = TimeSeriesSplit(n_splits=5)
-    candidates = [
-        "multinomial_with_draw_calibration",
-        "random_forest_with_draw_calibration",
-        "extra_trees_with_draw_calibration",
-    ]
+    candidates = [*DEPLOYABLE_KINDS, *BOOSTER_KINDS]
     candidate_results: dict[str, dict[str, list[float] | float]] = {
         kind: {"cvAccuracy": [], "cvLogLoss": []} for kind in candidates
     }
@@ -1143,19 +1321,27 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     X_train_h = holdout_scaler.fit_transform(X[:split_idx])
     X_test_h = holdout_scaler.transform(X[split_idx:])
 
-    best_kind = candidates[0]
+    best_kind = DEPLOYABLE_KINDS[0]
     best_holdout_acc = -1.0
     best_holdout_loss = float("inf")
     best_draw_blend = 0.35
     holdout_summary: dict[str, dict[str, float]] = {}
 
     holdout_candidates = [*candidates, "stacking_logistic"]
+    if BOOSTER_KINDS:
+        holdout_candidates.append("stacking_logistic_with_boosters")
     for kind in holdout_candidates:
-        if kind == "stacking_logistic":
+        if kind in ("stacking_logistic", "stacking_logistic_with_boosters"):
+            base_kinds = (
+                BOOSTER_STACK_BASE_KINDS
+                if kind == "stacking_logistic_with_boosters"
+                else STACK_BASE_KINDS
+            )
             stack_model = train_stacking_model(
                 X_train_h,
                 y_outcome[:split_idx],
                 weights[:split_idx],
+                base_kinds,
             )
             holdout_probs = stacking_predict_proba(stack_model, X_test_h)
             holdout_acc = outcome_accuracy(y_outcome[split_idx:], holdout_probs)
@@ -1182,14 +1368,18 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
             "logLoss": float(holdout_loss),
             "drawBlend": float(draw_blend),
         }
-        if (holdout_acc, -holdout_loss) > (best_holdout_acc, -best_holdout_loss):
+        is_deployable = kind in (*DEPLOYABLE_KINDS, "stacking_logistic")
+        if is_deployable and (holdout_acc, -holdout_loss) > (
+            best_holdout_acc,
+            -best_holdout_loss,
+        ):
             best_kind = kind
             best_holdout_acc = float(holdout_acc)
             best_holdout_loss = float(holdout_loss)
             best_draw_blend = float(draw_blend)
 
     if best_kind == "stacking_logistic":
-        outcome_model = train_stacking_model(X_scaled, y_outcome, weights)
+        outcome_model = train_stacking_model(X_scaled, y_outcome, weights, STACK_BASE_KINDS)
         draw_model = LogisticRegression(
             max_iter=1500,
             class_weight="balanced",
@@ -1276,6 +1466,7 @@ def evaluate_system_accuracy(
     fifa_blend: float,
     elo_blend: float,
     ml_blend: float,
+    decision_calibration: dict | None = None,
 ) -> dict[str, float]:
     split_idx = int(len(ml_rows) * 0.85)
     holdout = ml_rows[split_idx:]
@@ -1301,10 +1492,13 @@ def evaluate_system_accuracy(
         else:
             ensemble_probs[i] = poisson_probs[i]
 
+    calibrated_probs = apply_decision_calibration(ensemble_probs, decision_calibration)
+
     return {
         "poissonAccuracy": round(outcome_accuracy(y_true, poisson_probs), 4),
         "mlAccuracyHoldout": round(outcome_accuracy(y_true, ml_probs), 4) if ml_meta else None,
         "combinedAccuracy": round(outcome_accuracy(y_true, ensemble_probs), 4),
+        "calibratedAccuracy": round(outcome_accuracy(y_true, calibrated_probs), 4),
         "holdoutSize": len(holdout),
     }
 
@@ -1313,7 +1507,7 @@ def tune_blend_weights(
     ml_rows: list[dict],
     ml_meta: dict | None,
     dixon_coles_rho: float,
-) -> tuple[float, float, float]:
+) -> tuple[float, float, float, dict]:
     if not ml_meta or len(ml_rows) < 500:
         return FIFA_BLEND_WEIGHT, ELO_BLEND_WEIGHT, ML_BLEND_WEIGHT
 
@@ -1325,6 +1519,8 @@ def tune_blend_weights(
     best_elo = ELO_BLEND_WEIGHT
     best_ml = ML_BLEND_WEIGHT
     best_acc = -1.0
+    best_loss = float("inf")
+    best_ensemble: np.ndarray | None = None
 
     ml_probs = ml_probs_from_meta(ml_meta, holdout)
 
@@ -1343,17 +1539,28 @@ def tune_blend_weights(
             ensemble = elo_w * poisson_probs + ml_w * ml_probs
             ensemble /= ensemble.sum(axis=1, keepdims=True)
             acc = outcome_accuracy(y_true, ensemble)
-            if acc > best_acc:
+            loss = log_loss(y_true, ensemble, labels=[0, 1, 2])
+            if (acc, -loss) > (best_acc, -best_loss):
                 best_acc = acc
+                best_loss = loss
                 best_fifa = fifa_blend
                 best_elo = elo_w
                 best_ml = ml_w
+                best_ensemble = ensemble
 
+    best_calibration, calibrated = tune_decision_calibration(y_true, best_ensemble)
+    calibrated_acc = outcome_accuracy(y_true, calibrated)
     print(
         f"  Tuned blends — FIFA: {best_fifa:.2f}, Poisson: {best_elo:.2f}, ML: {best_ml:.2f} "
-        f"(holdout acc {best_acc:.3f})"
+        f"(raw holdout acc {best_acc:.3f}, calibrated {calibrated_acc:.3f})"
     )
-    return best_fifa, best_elo, best_ml
+    if best_calibration:
+        print(
+            f"  Decision calibration — draw x{best_calibration['drawMultiplier']:.2f}, "
+            f"close margin {best_calibration['closeMargin']:.2f}, "
+            f"min draw {best_calibration['minDrawProbability']:.2f}"
+        )
+    return best_fifa, best_elo, best_ml, best_calibration
 
 
 def build_scorer_stats(scorers: pd.DataFrame) -> dict:
@@ -1425,13 +1632,19 @@ def main():
         print("  Training ML candidates + stacking...")
         ml_meta = train_ml_models(ml_rows)
 
-        fifa_blend, elo_blend, ml_blend = tune_blend_weights(
+        fifa_blend, elo_blend, ml_blend, decision_calibration = tune_blend_weights(
             ml_rows, ml_meta, dixon_coles_rho
         )
         system_metrics = evaluate_system_accuracy(
-            ml_rows, ml_meta, dixon_coles_rho, fifa_blend, elo_blend, ml_blend
+            ml_rows,
+            ml_meta,
+            dixon_coles_rho,
+            fifa_blend,
+            elo_blend,
+            ml_blend,
+            decision_calibration,
         )
-        score = system_metrics.get("combinedAccuracy", 0.0) if system_metrics else 0.0
+        score = system_metrics.get("calibratedAccuracy", 0.0) if system_metrics else 0.0
         experiment_results.append(
             {
                 **params,
@@ -1439,6 +1652,7 @@ def main():
                 "fifaBlendWeight": fifa_blend,
                 "eloBlendWeight": elo_blend,
                 "mlBlendWeight": ml_blend,
+                "decisionCalibration": decision_calibration,
                 "systemMetrics": system_metrics,
             }
         )
@@ -1446,7 +1660,8 @@ def main():
             print(
                 f"  Holdout accuracy - Poisson: {system_metrics['poissonAccuracy']:.3f}, "
                 f"ML: {system_metrics.get('mlAccuracyHoldout', 0):.3f}, "
-                f"Combined: {system_metrics['combinedAccuracy']:.3f}"
+                f"Combined: {system_metrics['combinedAccuracy']:.3f}, "
+                f"Calibrated: {system_metrics['calibratedAccuracy']:.3f}"
             )
 
         if best_run is None or score > best_run["score"]:
@@ -1460,6 +1675,7 @@ def main():
                 "fifa_blend": fifa_blend,
                 "elo_blend": elo_blend,
                 "ml_blend": ml_blend,
+                "decision_calibration": decision_calibration,
                 "system_metrics": system_metrics,
             }
     if best_run is None:
@@ -1473,6 +1689,7 @@ def main():
     fifa_blend = best_run["fifa_blend"]
     elo_blend = best_run["elo_blend"]
     ml_blend = best_run["ml_blend"]
+    decision_calibration = best_run["decision_calibration"]
     system_metrics = best_run["system_metrics"]
 
     print(
@@ -1496,6 +1713,7 @@ def main():
         "featureFifaBlendWeight": FIFA_BLEND_WEIGHT,
         "eloBlendWeight": elo_blend,
         "mlBlendWeight": ml_blend,
+        "decisionCalibration": decision_calibration,
         "maxGoals": MAX_GOALS,
         "dixonColesRho": dixon_coles_rho,
         "scorerHalfLifeDays": SCORER_HALF_LIFE_DAYS,

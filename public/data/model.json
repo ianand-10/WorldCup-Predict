@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-17T08:16:56.434537Z",
+  "generatedAt": "2026-06-18T09:23:40.464785Z",
   "matchCount": 5678,
   "teamCount": 261,
   "homeAdvantageGoals": 0.28,
@@ -7,6 +7,17 @@
   "featureFifaBlendWeight": 0.3,
   "eloBlendWeight": 0.0,
   "mlBlendWeight": 1.0,
+  "decisionCalibration": {
+    "drawMultiplier": 1.08,
+    "closeMargin": 0.08,
+    "minDrawProbability": 0.2,
+    "favoriteMultiplier": 1.04,
+    "favoriteMinProbability": 0.42,
+    "accuracy": 0.6467,
+    "logLoss": 0.8175,
+    "baselineAccuracy": 0.6444,
+    "baselineLogLoss": 0.8176
+  },
   "maxGoals": 8,
   "dixonColesRho": -0.01,
   "scorerHalfLifeDays": 365,
@@ -29,13 +40,25 @@
       "recencyHalfLifeDays": 900,
       "useHistoricalFifa": true,
       "selectedModel": "multinomial_with_draw_calibration",
-      "fifaBlendWeight": 0.3,
-      "eloBlendWeight": 0.4,
-      "mlBlendWeight": 0.6,
+      "fifaBlendWeight": 0.35,
+      "eloBlendWeight": 0.2,
+      "mlBlendWeight": 0.8,
+      "decisionCalibration": {
+        "drawMultiplier": 1.4,
+        "closeMargin": 0.04,
+        "minDrawProbability": 0.26,
+        "favoriteMultiplier": 1.08,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6244,
+        "logLoss": 0.8372,
+        "baselineAccuracy": 0.6209,
+        "baselineLogLoss": 0.8385
+      },
       "systemMetrics": {
-        "poissonAccuracy": 0.5927,
+        "poissonAccuracy": 0.5939,
         "mlAccuracyHoldout": 0.6197,
         "combinedAccuracy": 0.6209,
+        "calibratedAccuracy": 0.6244,
         "holdoutSize": 852
       }
     },
@@ -51,10 +74,22 @@
       "fifaBlendWeight": 0.35,
       "eloBlendWeight": 0.4,
       "mlBlendWeight": 0.6,
+      "decisionCalibration": {
+        "drawMultiplier": 1.16,
+        "closeMargin": 0.02,
+        "minDrawProbability": 0.24,
+        "favoriteMultiplier": 1.08,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6244,
+        "logLoss": 0.8496,
+        "baselineAccuracy": 0.6244,
+        "baselineLogLoss": 0.8536
+      },
       "systemMetrics": {
         "poissonAccuracy": 0.5939,
         "mlAccuracyHoldout": 0.6185,
         "combinedAccuracy": 0.6244,
+        "calibratedAccuracy": 0.6244,
         "holdoutSize": 852
       }
     },
@@ -70,10 +105,22 @@
       "fifaBlendWeight": 0.2,
       "eloBlendWeight": 0.0,
       "mlBlendWeight": 1.0,
+      "decisionCalibration": {
+        "drawMultiplier": 1.0,
+        "closeMargin": 0.14,
+        "minDrawProbability": 0.16,
+        "favoriteMultiplier": 1.08,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6256,
+        "logLoss": 0.829,
+        "baselineAccuracy": 0.6256,
+        "baselineLogLoss": 0.831
+      },
       "systemMetrics": {
         "poissonAccuracy": 0.5728,
         "mlAccuracyHoldout": 0.6256,
         "combinedAccuracy": 0.6256,
+        "calibratedAccuracy": 0.6256,
         "holdoutSize": 852
       }
     },
@@ -89,10 +136,22 @@
       "fifaBlendWeight": 0.2,
       "eloBlendWeight": 0.2,
       "mlBlendWeight": 0.8,
+      "decisionCalibration": {
+        "drawMultiplier": 1.16,
+        "closeMargin": 0.02,
+        "minDrawProbability": 0.16,
+        "favoriteMultiplier": 1.08,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6291,
+        "logLoss": 0.8344,
+        "baselineAccuracy": 0.6291,
+        "baselineLogLoss": 0.8373
+      },
       "systemMetrics": {
         "poissonAccuracy": 0.5739,
         "mlAccuracyHoldout": 0.6244,
         "combinedAccuracy": 0.6291,
+        "calibratedAccuracy": 0.6291,
         "holdoutSize": 852
       }
     },
@@ -108,10 +167,22 @@
       "fifaBlendWeight": 0.2,
       "eloBlendWeight": 0.2,
       "mlBlendWeight": 0.8,
+      "decisionCalibration": {
+        "drawMultiplier": 1.08,
+        "closeMargin": 0.02,
+        "minDrawProbability": 0.16,
+        "favoriteMultiplier": 1.08,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6279,
+        "logLoss": 0.8355,
+        "baselineAccuracy": 0.6279,
+        "baselineLogLoss": 0.8378
+      },
       "systemMetrics": {
         "poissonAccuracy": 0.5751,
         "mlAccuracyHoldout": 0.6232,
         "combinedAccuracy": 0.6279,
+        "calibratedAccuracy": 0.6279,
         "holdoutSize": 852
       }
     },
@@ -127,10 +198,22 @@
       "fifaBlendWeight": 0.2,
       "eloBlendWeight": 0.0,
       "mlBlendWeight": 1.0,
+      "decisionCalibration": {
+        "drawMultiplier": 1.08,
+        "closeMargin": 0.08,
+        "minDrawProbability": 0.2,
+        "favoriteMultiplier": 1.04,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6467,
+        "logLoss": 0.8175,
+        "baselineAccuracy": 0.6444,
+        "baselineLogLoss": 0.8176
+      },
       "systemMetrics": {
         "poissonAccuracy": 0.5739,
         "mlAccuracyHoldout": 0.6444,
         "combinedAccuracy": 0.6444,
+        "calibratedAccuracy": 0.6467,
         "holdoutSize": 852
       }
     },
@@ -146,10 +229,22 @@
       "fifaBlendWeight": 0.2,
       "eloBlendWeight": 0.0,
       "mlBlendWeight": 1.0,
+      "decisionCalibration": {
+        "drawMultiplier": 1.08,
+        "closeMargin": 0.18,
+        "minDrawProbability": 0.26,
+        "favoriteMultiplier": 1.04,
+        "favoriteMinProbability": 0.42,
+        "accuracy": 0.6455,
+        "logLoss": 0.8157,
+        "baselineAccuracy": 0.6397,
+        "baselineLogLoss": 0.8154
+      },
       "systemMetrics": {
         "poissonAccuracy": 0.5681,
         "mlAccuracyHoldout": 0.6397,
         "combinedAccuracy": 0.6397,
+        "calibratedAccuracy": 0.6455,
         "holdoutSize": 852
       }
     }
@@ -158,6 +253,7 @@
     "poissonAccuracy": 0.5739,
     "mlAccuracyHoldout": 0.6444,
     "combinedAccuracy": 0.6444,
+    "calibratedAccuracy": 0.6467,
     "holdoutSize": 852
   },
   "ml": {
@@ -221,6 +317,20 @@
         "holdoutAccuracy": 0.5951,
         "holdoutLogLoss": 0.8676,
         "drawBlendWeight": 0.0
+      },
+      "xgboost_with_draw_calibration": {
+        "cvAccuracy": 0.5825,
+        "cvLogLoss": 0.9011,
+        "holdoutAccuracy": 0.6326,
+        "holdoutLogLoss": 0.8206,
+        "drawBlendWeight": 0.25
+      },
+      "lightgbm_with_draw_calibration": {
+        "cvAccuracy": 0.571,
+        "cvLogLoss": 0.9117,
+        "holdoutAccuracy": 0.6338,
+        "holdoutLogLoss": 0.8124,
+        "drawBlendWeight": 0.0
       }
     },
     "holdoutCandidateResults": {
@@ -239,9 +349,24 @@
         "holdoutLogLoss": 0.8676,
         "drawBlendWeight": 0.0
       },
+      "xgboost_with_draw_calibration": {
+        "holdoutAccuracy": 0.6326,
+        "holdoutLogLoss": 0.8206,
+        "drawBlendWeight": 0.25
+      },
+      "lightgbm_with_draw_calibration": {
+        "holdoutAccuracy": 0.6338,
+        "holdoutLogLoss": 0.8124,
+        "drawBlendWeight": 0.0
+      },
       "stacking_logistic": {
         "holdoutAccuracy": 0.6232,
         "holdoutLogLoss": 0.8317,
+        "drawBlendWeight": 0.0
+      },
+      "stacking_logistic_with_boosters": {
+        "holdoutAccuracy": 0.6268,
+        "holdoutLogLoss": 0.8294,
         "drawBlendWeight": 0.0
       }
     },

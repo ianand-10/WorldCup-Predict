@@ -83,7 +83,20 @@ export interface SystemMetrics {
   poissonAccuracy: number;
   mlAccuracyHoldout?: number | null;
   combinedAccuracy: number;
+  calibratedAccuracy?: number;
   holdoutSize: number;
+}
+
+export interface DecisionCalibration {
+  drawMultiplier: number;
+  closeMargin: number;
+  minDrawProbability: number;
+  favoriteMultiplier: number;
+  favoriteMinProbability: number;
+  accuracy?: number;
+  logLoss?: number;
+  baselineAccuracy?: number;
+  baselineLogLoss?: number;
 }
 
 export interface ModelConfig {
@@ -95,6 +108,7 @@ export interface ModelConfig {
   featureFifaBlendWeight?: number;
   eloBlendWeight: number;
   mlBlendWeight: number;
+  decisionCalibration?: DecisionCalibration;
   maxGoals: number;
   dixonColesRho?: number;
   scorerHalfLifeDays?: number;

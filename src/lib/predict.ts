@@ -359,6 +359,41 @@ function predictScorers(
   }));
 }
 
+function applyDecisionCalibration(probs: {
+  winA: number;
+  draw: number;
+  winB: number;
+}): { winA: number; draw: number; winB: number } {
+  const calibration = config.decisionCalibration;
+  if (!calibration) return probs;
+
+  let winA = probs.winA;
+  let draw = probs.draw;
+  let winB = probs.winB;
+  const winGap = Math.abs(winA - winB);
+  const favorite = Math.max(winA, winB);
+  const isClose =
+    winGap <= calibration.closeMargin &&
+    draw >= calibration.minDrawProbability;
+
+  if (isClose) {
+    draw *= calibration.drawMultiplier;
+  } else if (favorite >= calibration.favoriteMinProbability) {
+    if (winA >= winB) {
+      winA *= calibration.favoriteMultiplier;
+    } else {
+      winB *= calibration.favoriteMultiplier;
+    }
+  }
+
+  const total = winA + draw + winB;
+  return {
+    winA: winA / total,
+    draw: draw / total,
+    winB: winB / total,
+  };
+}
+
 export function predictMatch(
   teamA: string,
   teamB: string,
@@ -415,6 +450,11 @@ export function predictMatch(
     draw /= total;
     winB /= total;
   }
+
+  const calibrated = applyDecisionCalibration({ winA, draw, winB });
+  winA = calibrated.winA;
+  draw = calibrated.draw;
+  winB = calibrated.winB;
 
   return {
     teamA,
