@@ -68,9 +68,9 @@ export default function MatchPredictor() {
               <p className="font-mono text-sm text-white">
                 {meta.teamCount} teams
               </p>
-              {meta.combinedAccuracy != null && (
+              {meta.calibratedAccuracy != null && (
                 <p className="font-mono text-[10px] text-accent-gold">
-                  Combined accuracy {(meta.combinedAccuracy * 100).toFixed(1)}%
+                  Recent holdout accuracy {(meta.calibratedAccuracy * 100).toFixed(1)}%
                 </p>
               )}
               {meta.mlAccuracy != null && (

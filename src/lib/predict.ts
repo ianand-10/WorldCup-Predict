@@ -148,6 +148,13 @@ function buildFeatureVector(
     blendedHomeDefense,
     ratingsAway.awayPenalty
   );
+  const fifaBlendMatrix = scorelineMatrix(
+    expHomeFifa,
+    expAwayFifa,
+    config.maxGoals,
+    config.dixonColesRho ?? 0
+  );
+  const marketFallback = outcomeProbabilities(fifaBlendMatrix, true);
   const eloDiff = ratingsHome.overall - ratingsAway.overall;
   const fifaDiff = homeFifa - awayFifa;
   const homeForm = liveState.form[homeTeam] ?? 0.5;
@@ -183,6 +190,14 @@ function buildFeatureVector(
     Math.abs(expHome - expAway) < 0.45 ? 1 : 0,
     ratingAgreement,
     1 - ratingAgreement,
+    0,
+    marketFallback.winA,
+    marketFallback.draw,
+    marketFallback.winB,
+    Math.max(marketFallback.winA, marketFallback.winB),
+    0,
+    0,
+    0,
   ];
 }
 

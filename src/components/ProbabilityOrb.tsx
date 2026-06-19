@@ -65,8 +65,14 @@ export default function ProbabilityOrb({
   const wD = (draw / total) * 360;
   const wB = (winB / total) * 360;
 
-  const leader =
-    winA >= winB ? { name: teamA, prob: winA } : { name: teamB, prob: winB };
+  const outcomes = [
+    { name: teamA, prob: winA },
+    { name: "Draw", prob: draw },
+    { name: teamB, prob: winB },
+  ];
+  const leader = outcomes.reduce((best, item) =>
+    item.prob > best.prob ? item : best
+  );
 
   return (
     <motion.div
@@ -94,7 +100,7 @@ export default function ProbabilityOrb({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <p className="text-[10px] uppercase tracking-widest text-muted">Favorite</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted">Top outcome</p>
           <p className="mt-1 max-w-[120px] truncate text-sm font-semibold text-white">
             {leader.name}
           </p>

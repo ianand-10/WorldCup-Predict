@@ -160,6 +160,14 @@ FEATURE_NAMES = [
     "closeMatchIndicator",
     "ratingAgreement",
     "fifaEloDisagreement",
+    "hasMarketOdds",
+    "marketHomeProb",
+    "marketDrawProb",
+    "marketAwayProb",
+    "marketFavoriteProb",
+    "modelMarketHomeDiff",
+    "modelMarketDrawDiff",
+    "modelMarketAwayDiff",
 ]
 
 TOURNAMENT_WEIGHT = {
@@ -311,6 +319,54 @@ def load_scorers() -> pd.DataFrame:
     return df
 
 
+def odds_key(home: str, away: str, match_date: pd.Timestamp) -> tuple[str, str, str]:
+    return (
+        match_date.strftime("%Y-%m-%d"),
+        normalize_fifa_team_name(home).lower(),
+        normalize_fifa_team_name(away).lower(),
+    )
+
+
+def implied_probs(home_odds: float, draw_odds: float, away_odds: float) -> tuple[float, float, float]:
+    raw = np.array([1.0 / home_odds, 1.0 / draw_odds, 1.0 / away_odds], dtype=float)
+    total = raw.sum()
+    if not np.isfinite(total) or total <= 0:
+        return 1 / 3, 1 / 3, 1 / 3
+    probs = raw / total
+    return float(probs[0]), float(probs[1]), float(probs[2])
+
+
+def load_market_odds() -> dict[tuple[str, str, str], tuple[float, float, float]]:
+    path = DATA_DIR / "odds.csv"
+    if not path.exists():
+        print("  No odds.csv found; market odds features disabled")
+        return {}
+
+    df = pd.read_csv(path)
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    required = {"date", "home_team", "away_team", "home_odds", "draw_odds", "away_odds"}
+    if not required.issubset(df.columns):
+        print("  odds.csv missing required columns; market odds features disabled")
+        return {}
+
+    df["date"] = pd.to_datetime(df["date"])
+    odds: dict[tuple[str, str, str], tuple[float, float, float]] = {}
+    for _, row in df.iterrows():
+        try:
+            probs = implied_probs(
+                float(row["home_odds"]),
+                float(row["draw_odds"]),
+                float(row["away_odds"]),
+            )
+        except (TypeError, ValueError, ZeroDivisionError):
+            continue
+
+        odds[odds_key(str(row["home_team"]), str(row["away_team"]), row["date"])] = probs
+
+    print(f"  {len(odds)} market odds rows loaded from odds.csv")
+    return odds
+
+
 def normalize_fifa_team_name(name: str) -> str:
     cleaned = str(name).strip()
     return FIFA_TEAM_ALIASES.get(cleaned, cleaned)
@@ -425,6 +481,30 @@ def load_historical_fifa_rankings() -> dict[tuple[int, int], dict[str, float]]:
             snapshots[(year, semester)][team] = points
 
     usable = {key: value for key, value in snapshots.items() if len(value) > 20}
+
+    rank_2025_path = ROOT / "2025 FIFA Rankings - Sheet1.csv"
+    if rank_2025_path.exists():
+        rank_df = pd.read_csv(rank_2025_path, skip_blank_lines=True)
+        if all(str(c).lower().startswith("unnamed") for c in rank_df.columns):
+            rank_df.columns = [str(v).strip().lower() for v in rank_df.iloc[0].tolist()]
+            rank_df = rank_df.iloc[1:].reset_index(drop=True)
+        rank_df.columns = [str(c).strip().lower() for c in rank_df.columns]
+        team_col = next((c for c in ("team", "country", "nation") if c in rank_df.columns), None)
+        rank_col = "rank" if "rank" in rank_df.columns else None
+
+        rank_points: dict[str, float] = {}
+        if team_col and rank_col:
+            for _, row in rank_df.iterrows():
+                team = normalize_fifa_team_name(str(row[team_col]).strip())
+                rank = parse_fifa_rank_value(row.get(rank_col))
+                if team and rank is not None:
+                    rank_points[team] = max(800.0, 2100.0 - rank * 5.0)
+
+        if len(rank_points) > 20:
+            usable[(2025, 1)] = rank_points
+            usable[(2025, 2)] = rank_points
+            print(f"  2025 FIFA ranking snapshot loaded from {rank_2025_path.name}")
+
     print(f"  {len(usable)} historical FIFA snapshots loaded from {path.name}")
     return usable
 
@@ -521,6 +601,7 @@ def build_match_features(
     match_date: pd.Timestamp,
     home_fifa: float,
     away_fifa: float,
+    market_probs: tuple[float, float, float] | None,
 ) -> dict[str, float]:
     pk = pair_key(home, away)
     pair_stats = h2h_pair.get(pk, {})
@@ -539,6 +620,9 @@ def build_match_features(
         blended_home_off, blended_away_def, venue_boost + hr.home_bonus
     )
     exp_away_fifa = goal_expectation(blended_away_off, blended_home_def, ar.away_penalty)
+    poisson_home, poisson_draw, poisson_away = poisson_outcome_probs(
+        exp_home_fifa, exp_away_fifa, -0.01
+    )
 
     elo_diff = hr.overall - ar.overall
     fifa_diff = home_fifa - away_fifa
@@ -547,6 +631,8 @@ def build_match_features(
     home_recent_opp_fifa = recent_average(opponent_fifa_history[home])
     away_recent_opp_fifa = recent_average(opponent_fifa_history[away])
     rating_agreement = 1.0 if elo_diff == 0 or fifa_diff == 0 or elo_diff * fifa_diff > 0 else 0.0
+    has_market_odds = 1.0 if market_probs is not None else 0.0
+    market_home, market_draw, market_away = market_probs or (poisson_home, poisson_draw, poisson_away)
 
     return {
         "eloOverallDiff": elo_diff,
@@ -574,6 +660,14 @@ def build_match_features(
         "closeMatchIndicator": 1.0 if abs(exp_home - exp_away) < 0.45 else 0.0,
         "ratingAgreement": rating_agreement,
         "fifaEloDisagreement": 1.0 - rating_agreement,
+        "hasMarketOdds": has_market_odds,
+        "marketHomeProb": market_home,
+        "marketDrawProb": market_draw,
+        "marketAwayProb": market_away,
+        "marketFavoriteProb": max(market_home, market_away),
+        "modelMarketHomeDiff": poisson_home - market_home,
+        "modelMarketDrawDiff": poisson_draw - market_draw,
+        "modelMarketAwayDiff": poisson_away - market_away,
     }
 
 
@@ -581,7 +675,9 @@ def compute_elos_and_features(
     matches: pd.DataFrame,
     current_fifa: dict[str, float],
     historical_fifa: dict[tuple[int, int], dict[str, float]],
+    market_odds: dict[tuple[str, str, str], tuple[float, float, float]] | None = None,
 ):
+    market_odds = market_odds or {}
     teams: dict[str, TeamRatings] = defaultdict(TeamRatings)
     form: dict[str, list[tuple[int, int]]] = defaultdict(list)
     opponent_fifa_history: dict[str, list[float]] = defaultdict(list)
@@ -605,6 +701,7 @@ def compute_elos_and_features(
         )
         home_fifa = fifa_points_for_date(home, match_date, current_fifa, historical_fifa)
         away_fifa = fifa_points_for_date(away, match_date, current_fifa, historical_fifa)
+        market_probs = market_odds.get(odds_key(home, away, match_date))
 
         hr, ar = teams[home], teams[away]
 
@@ -621,6 +718,7 @@ def compute_elos_and_features(
             match_date,
             home_fifa,
             away_fifa,
+            market_probs,
         )
 
         outcome = 0 if hs > aws else (2 if hs < aws else 1)
@@ -984,10 +1082,10 @@ def tune_decision_calibration(y_true: np.ndarray, probs: np.ndarray) -> tuple[di
     best_probs = probs
     best_key = (baseline_acc, -baseline_loss)
 
-    for draw_multiplier in (1.0, 1.08, 1.16, 1.24, 1.32, 1.4, 1.55):
-        for close_margin in (0.02, 0.04, 0.06, 0.08, 0.1, 0.14, 0.18, 0.24):
-            for min_draw_probability in (0.16, 0.18, 0.2, 0.22, 0.24, 0.26):
-                for favorite_multiplier in (1.0, 1.04, 1.08):
+    for draw_multiplier in (1.0, 1.06, 1.08, 1.12, 1.16, 1.24, 1.32, 1.4, 1.55, 1.7):
+        for close_margin in (0.02, 0.04, 0.06, 0.08, 0.1, 0.14, 0.18, 0.24, 0.3):
+            for min_draw_probability in (0.14, 0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28):
+                for favorite_multiplier in (1.0, 1.02, 1.04, 1.08):
                     calibration = {
                         "drawMultiplier": draw_multiplier,
                         "closeMargin": close_margin,
@@ -1325,6 +1423,7 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
     best_holdout_acc = -1.0
     best_holdout_loss = float("inf")
     best_draw_blend = 0.35
+    best_holdout_probs: np.ndarray | None = None
     holdout_summary: dict[str, dict[str, float]] = {}
 
     holdout_candidates = [*candidates, "stacking_logistic"]
@@ -1377,6 +1476,7 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
             best_holdout_acc = float(holdout_acc)
             best_holdout_loss = float(holdout_loss)
             best_draw_blend = float(draw_blend)
+            best_holdout_probs = holdout_probs
 
     if best_kind == "stacking_logistic":
         outcome_model = train_stacking_model(X_scaled, y_outcome, weights, STACK_BASE_KINDS)
@@ -1418,6 +1518,7 @@ def train_ml_models(ml_rows: list[dict]) -> dict | None:
         "holdoutLogLoss": round(float(best_holdout_loss), 4),
         "cvFolds": len(selected_scores),
         "drawBlendWeight": best_draw_blend,
+        "_holdoutProbs": best_holdout_probs.tolist() if best_holdout_probs is not None else None,
         "candidateResults": {
             kind: {
                 "cvAccuracy": round(float(np.mean(values["cvAccuracy"])), 4)
@@ -1479,7 +1580,10 @@ def evaluate_system_accuracy(
     ensemble_probs = np.zeros((len(holdout), 3))
 
     if ml_meta:
-        ml_probs = ml_probs_from_meta(ml_meta, holdout)
+        if ml_meta.get("_holdoutProbs") is not None:
+            ml_probs = np.array(ml_meta["_holdoutProbs"], dtype=float)
+        else:
+            ml_probs = ml_probs_from_meta(ml_meta, holdout)
 
     for i, row in enumerate(holdout):
         exp_home, exp_away = lambdas_from_row(row, fifa_blend)
@@ -1522,7 +1626,10 @@ def tune_blend_weights(
     best_loss = float("inf")
     best_ensemble: np.ndarray | None = None
 
-    ml_probs = ml_probs_from_meta(ml_meta, holdout)
+    if ml_meta.get("_holdoutProbs") is not None:
+        ml_probs = np.array(ml_meta["_holdoutProbs"], dtype=float)
+    else:
+        ml_probs = ml_probs_from_meta(ml_meta, holdout)
 
     poisson_by_fifa: dict[float, np.ndarray] = {}
     for fifa_blend in (0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65):
@@ -1611,6 +1718,8 @@ def main():
     print("Loading FIFA rankings...")
     current_fifa = load_fifa_rankings()
     historical_fifa = load_historical_fifa_rankings()
+    print("Loading market odds...")
+    market_odds = load_market_odds()
     best_run = None
     experiment_results = []
 
@@ -1621,7 +1730,7 @@ def main():
         print("  Computing ELO ratings and features...")
         fifa_history_for_run = historical_fifa if params.get("useHistoricalFifa", True) else {}
         elos, history, ml_rows, dc_samples, live_state = compute_elos_and_features(
-            matches, current_fifa, fifa_history_for_run
+            matches, current_fifa, fifa_history_for_run, market_odds
         )
         print(f"  {len(elos)} teams rated")
 
@@ -1720,7 +1829,7 @@ def main():
         "selectedExperiment": best_run["params"],
         "experimentResults": experiment_results,
         "systemMetrics": system_metrics,
-        "ml": ml_meta,
+        "ml": {k: v for k, v in ml_meta.items() if not k.startswith("_")} if ml_meta else None,
     }
 
     with open(OUT_DIR / "teams.json", "w", encoding="utf-8") as f:
